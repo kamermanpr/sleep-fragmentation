@@ -696,19 +696,25 @@ Effect size
 
     ## # Baseline night
     ## 
-    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: 25mm (13 to 36)
+    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a
+    ## ten-minute period following removal of a torniquet:
+    ## 25mm (13 to 36)
 
 ![](./figures/effectSize-1.png)
 
     ## # One night of sleep fragmentation
     ## 
-    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: 10mm (-2 to 23)
+    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a
+    ## ten-minute period following removal of a torniquet:
+    ## 10mm (-2 to 23)
 
 ![](./figures/effectSize-2.png)
 
     ## # Two nights of sleep fragmentation
     ## 
-    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: 10mm (4 to 17)
+    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a
+    ## ten-minute period following removal of a torniquet:
+    ## 10mm (4 to 17)
 
 ![](./figures/effectSize-3.png)
 
