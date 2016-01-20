@@ -1,0 +1,373 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+# Demographics
+
+### Authors: Stella Iacovides & Peter Kamerman
+
+**Date: `r format(Sys.Date(), '%B %d, %Y')`**
+
+***
+
+## Load required packages and set chunk options
+```{r LoadPackages, message = FALSE}
+# Load packages
+library(knitr)
+library(pander)
+library(ggplot2)
+library(scales)
+library(grid)
+library(cowplot)
+library(readr)
+library(dplyr)
+library(tidyr)
+
+# knitr chunk options
+opts_chunk$set(echo = FALSE,
+               warning = FALSE,
+               message = FALSE,
+               fig.path = './figures/',
+               fig.width = 7,
+               fig.height = 6,
+               dev = c('png', 'pdf'),
+               tidy = TRUE, 
+               tidy.opts = list(width.cutoff = 65))
+```
+
+## Load data
+```{r import_demo, echo = TRUE}
+demo <- read_csv('./data/demographics.csv', col_names = T)
+```
+
+## Quick look
+```{r look_demo}
+# dim(data)
+# names(demo)
+# head(demo)
+# tail(demo)
+glimpse(demo)
+summary(demo)
+```
+
+## Summary plots
+### Age
+```{r age}
+# table
+pander(summary(demo$age_years), 
+       caption = 'Five-number summary of age (years)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = age_years)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of age\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Age (years)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Weight
+```{r weight}
+# table
+pander(summary(demo$weight_kg), 
+       caption = 'Five-number summary of weight (kg)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = weight_kg)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of weight\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Weight (kg)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Height
+```{r height}
+# table
+pander(summary(demo$height_m), 
+       caption = 'Five-number summary of height (m)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = height_m)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of height\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Height (m)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Body mass index (BMI)
+```{r bmi}
+# table
+pander(summary(demo$height_m), 
+       caption = 'Five-number summary of body mass index (BMI; m/kg^2)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = bmi_kg.m)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of body mass index (BMI)\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Body mass index (kg/m^2)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Intensity of menstrual pain
+```{r menstrualPain}
+# table
+pander(summary(demo$menstrual.pain_vas), 
+       caption = 'Five-number summary of menstrual pain ratings (0-100mm VAS)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = menstrual.pain_vas)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of menstrual pain\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Pain intensity (0-100mm VAS)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### General Health Questionniare
+```{r ghqScore}
+# table
+pander(summary(demo$ghq_score), 
+       caption = 'Five-number summary of General Health Questionniare (GHQ) scores')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = ghq_score)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_hline(yintercept = 6, 
+               colour = 'red',
+               size = 1,
+               linetype = 2) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of General Health Questionnaire\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'General Health Questionnaire score\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Pittsburg Sleep Quality Index (PSQI)
+```{r psqiScore}
+# table
+pander(summary(demo$psi_score), 
+       caption = 'Five-number summary of Pittsburg Sleep Quality Index (PSQI) scores')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = psi_score)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_hline(yintercept = 5, 
+               colour = 'red',
+               size = 1,
+               linetype = 2) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of Pittsburg Sleep Quality Index\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Pittsburg Sleep Quality Index\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Age at menarche
+```{r menarcheAge}
+# table
+pander(summary(demo$menarche.age_years), caption = 'Five-number summary of age at menarche (years)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = menarche.age_years)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of age of menarche\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Age of menarche (years)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Time since menarche
+```{r timeMenarche}
+# table
+pander(summary(demo$menstruation_years), 
+       caption = 'Five-number summary of time since menarche (years)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = menstruation_years)) +
+   geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of time since menarche\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Time since menarche (years)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Average menstrual cycle length
+```{r cycleLength}
+# table
+pander(summary(demo$cycle.length_days), 
+       caption = 'Five-number summary of menstrual cycle length (days)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = cycle.length_days)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of menstrual cycle length\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Length of menstrual cycle (days)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+### Duration of menstrual period
+```{r periodLength}
+# table
+pander(summary(demo$menses.length_days), 
+       caption = 'Five-number summary of duration of menstrual period (days)')
+
+# plot
+ggplot(data = demo, 
+       aes(x = factor('Participants'), 
+           y = menses.length_days)) +
+    geom_boxplot(outlier.size = 3,
+                 fatten = 3) +
+    geom_jitter(shape = 21,
+                size = 5,
+                fill = 'orange',
+                colour = '#D55E00',
+                position = position_jitter(height = 0)) +
+    labs(title  = 'Box-n-Whisker plot of duration of menstrual period\n(scatterplot of individual data: orange circles)',
+         x = '',
+         y = 'Menstrual period (days)\n') +
+    theme_cowplot() +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size =18),
+          plot.title = element_text(size = 18))
+```
+
+## Session information
+```{r sessionInfo}
+sessionInfo()
+```

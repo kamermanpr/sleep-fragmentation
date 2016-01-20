@@ -1,0 +1,27 @@
+# History file
+.Rhistory
+.Rapp.history
+
+# RStudio files
+*.user/
+*_cache/
+*_files/
+.Rproj.user
+*.Rproj
+
+# Office
+*.gddoc
+*.docx
+*.doc
+*.gdsheet
+*.xlsx
+*.xls
+*.gdslides
+*.pptx
+*.ppt
+
+# Other
+/manuscript
+*.log
+*.bak
+*.html

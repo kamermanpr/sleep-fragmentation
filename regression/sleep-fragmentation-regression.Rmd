@@ -1,0 +1,359 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+# Regression
+
+### Authors: Stella Iacovides & Peter Kamerman
+
+**Date: `r format(Sys.Date(), '%B %d, %Y')`**
+
+***
+
+## Load required packages and set chunk options
+```{r LoadPackages, message = FALSE}
+# Load packages
+library(ggplot2)
+library(scales)
+library(grid)
+library(cowplot)
+library(PMCMR) # pairwise Friedman posthoc tests
+library(metafor) # arcsine transform
+library(nlme) # mixed effect 'lme'
+library(gamlss) # GAM using beta distribution
+library(knitr)
+library(pander)
+library(readr)
+library(dplyr)
+library(tidyr)
+
+# Load palette
+cb8.categorical <- c("#0072B2", "#D55E00", "#009E73", "#F0E442", "#56B4E9", "#E69F00", "#CC79A7", "#999999")
+
+# set seed
+set.seed(123)
+
+# knitr chunk options
+opts_chunk$set(echo = FALSE,
+               warning = FALSE,
+               message = FALSE,
+               fig.path = './figures/',
+               fig.width = 7,
+               fig.height = 7,
+               dev = c('png', 'pdf'),
+               tidy = TRUE, 
+               tidy.opts = list(width.cutoff = 65))
+```
+
+## Load data
+```{r import_pain, echo = TRUE}
+data <- read_csv('./data/regression.csv', col_names = T)
+```
+
+## Quick look
+```{r look_Pain}
+# dim(data)
+# names(data)
+# head(data)
+# tail(data)
+glimpse(data)
+summary(data)
+```
+
+## Process data
+```{r process_Pain}
+# Convert id and period to factors
+ischaemia <- data %>%
+    mutate(id = factor(id), 
+           period = factor(period)) %>%
+    tbl_df()
+
+# Convert to long format table
+ischaemia_analysis <- ischaemia %>%
+    group_by(id, period) %>%
+    gather(key = time, 
+           value = score, 
+           3:13) %>%
+    mutate(time = as.numeric(as.character(time)),
+           score = score/100)
+
+# Process data for singlePanel plot
+ischaemia_plot <- ischaemia %>%
+    group_by(id, period) %>%
+    gather(key = time, value = score, 3:13) %>%
+    mutate(time = as.numeric(as.character(time)))
+
+## Process data for facetPanel plot 
+ischaemia_plot.f <- ischaemia_plot %>%
+    mutate(period = factor(period,
+                           levels = c('baseline',
+                                      'fragmentation1',
+                                      'fragmentation2'),
+                           labels = c('Baseline night',
+                                      'Fragmentation night 1',
+                                      'Fragmentation night 2')))
+```
+
+## Data analysis
+### Plot the data
+```{r singlePanel}
+# Plot a single panel plot of all data
+ggplot(ischaemia_plot, 
+       aes(x = time,
+           y = score,
+           colour = period,
+           fill = period)) +
+    geom_smooth(method = 'loess', alpha = 0.5, size = 2) +
+    labs(x = '\nTime (minutes)',
+         y = 'Pain intensity (0-100mm VAS)\n',
+         title = 'Pain intensity for 10 minutes after ischaemia\n') +
+    scale_y_continuous(limits = c(0, 100),
+                       expand = c(0,0)) +
+    scale_x_continuous(limits = c(0, 10),
+                       expand = c(0, 0),
+                       breaks = c(0, 2, 4, 6, 8, 10),
+                       labels = c(0, 2, 4, 6, 8, 10)) +
+    scale_fill_manual(name = 'Intervention',
+                      labels = c('Baseline night',
+                                 'Fragmentation night 1',
+                                 'Fragmentation night 2'),
+                      values = cb8.categorical) +
+    scale_colour_manual(name = 'Intervention',
+                      labels = c('Baseline night',
+                                 'Fragmentation night 1',
+                                 'Fragmentation night 2'),
+                      values = cb8.categorical) +
+    theme_cowplot() +
+    theme(legend.position = c(0.78, 0.12),
+          legend.text = element_text(size = 18),
+          legend.title = element_text(size = 18),
+          legend.background = element_rect(fill = 'gray90'),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18))
+```
+
+```{r facetPlot}
+# Multi-facet plot of all data
+ggplot(ischaemia_plot.f, 
+       aes(x = time,
+           y = score,
+           colour = period,
+           fill = period)) +
+    geom_smooth(method = 'loess', alpha = 0.5, size = 2) +
+    geom_jitter() +
+    facet_grid(period~.) +
+    labs(x = '\nTime (minutes)',
+         y = 'Pain intensity (0-100mm VAS)\n',
+         title = 'Facet plot: pain intensity for 10 minutes after ischaemia\n') +
+    scale_y_continuous(limits = c(00, 100),
+                       expand = c(0,0)) +
+    scale_x_continuous(limits = c(0, 10),
+                       expand = c(0, 0),
+                       breaks = c(0, 2, 4, 6, 8, 10),
+                       labels = c(0, 2, 4, 6, 8, 10)) +
+    scale_fill_manual(name = 'Intervention',
+                      labels = c('Baseline night',
+                                 'Fragmentation night 1',
+                                 'Fragmentation night 2'),
+                      values = cb8.categorical) +
+    scale_colour_manual(name = 'Intervention',
+                      labels = c('Baseline night',
+                                 'Fragmentation night 1',
+                                 'Fragmentation night 2'),
+                      values = cb8.categorical) +
+    theme_cowplot() +
+    theme(legend.position = 'none',
+          panel.margin.y = unit(1, 'lines'),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18))
+```
+
+## Regression analysis
+### Raw VAS scores
+```{r rawVAS}
+# Check data distribution
+histDist(ischaemia_analysis$score,
+         main = 'Density plot of raw VAS scores\n(expressed as a proportion)',
+         xlab = 'VAS',
+         ylab = 'Denisty')
+
+## Linear mixed model of raw VAS score (mod1)
+## with variable slope and intercept
+### Null model
+mod1.null <- lme(score ~ 1,
+                 random = ~ time | id,
+                 data = ischaemia_analysis,
+                 method = 'ML')
+summary(mod1.null)
+### Basic model (no intervention)
+mod1.basic <- lme(score ~ time,
+                 random = ~ time | id,
+                 data = ischaemia_analysis,
+                 method = 'ML')
+summary(mod1.basic)
+### Full model (time + intervention)
+mod1.full <- lme(score ~ time + period,
+                 random = ~ time | id,
+                 data = ischaemia_analysis,
+                 method = 'ML')
+summary(mod1.full)
+
+# Is the basic model fit better than that of the null model?
+anova(mod1.null, mod1.basic)
+# Is the basic model fit better than that of the null model?
+anova(mod1.null, mod1.full)
+# Is the basic model fit better than that of the basic model?
+anova(mod1.basic, mod1.full)
+
+# Diagnostic plots
+## Residuals vs fitted
+plot(fitted(mod1.full), residuals(mod1.full), main = 'Residuals vs fitted')
+abline(h = 0, col = 'red', lwd = 2)
+
+## Residuals vs mixed model index
+plot(residuals(mod1.full), main = 'Residuals vs mixed model index')
+abline(h = 0, col = 'red', lwd = 2)
+
+## Distribution of residuals
+histDist(residuals(mod1.full), 
+         main = 'Residual density distribution',
+         ylab = 'density')
+
+## QQ plot of residuals
+qqnorm(residuals(mod1.full))
+qqline(residuals(mod1.full), col = 'red', lwd = 2)
+```
+
+### Arcsine transformed VAS scores
+```{r arcsineVAS}
+# Create new column with VAS data transformed using arcsine square root transform
+ischaemia_analysis <- ischaemia_analysis %>%
+    mutate(score.arcsine = transf.arcsin(score))
+
+# Check data distribution
+histDist(ischaemia_analysis$score.arcsine,
+         main = 'Density plot of arcsine transformed VAS scores',
+         xlab = 'VAS',
+         ylab = 'Denisty')
+
+## Linear mixed model of arcsine transformed VAS scores (mod2)
+## with variable slope and intercept
+### Null model
+mod2.null <- lme(score.arcsine ~ 1,
+                 random = ~ time | id,
+                 data = ischaemia_analysis,
+                 method = 'ML')
+summary(mod2.null)
+### Basic model (no intervention)
+mod2.basic <- lme(score.arcsine ~ time,
+                 random = ~ time | id,
+                 data = ischaemia_analysis,
+                 method = 'ML')
+summary(mod2.basic)
+### Full model (time and intervention)
+mod2.full <- lme(score.arcsine ~ time + period,
+                 random = ~ time | id,
+                 data = ischaemia_analysis,
+                 method = 'ML')
+summary(mod2.full)
+
+# Is the basic model fit better than that of the null model?
+anova(mod2.null, mod2.basic)
+# Is the full model fit better than that of the null model?
+anova(mod2.null, mod2.full)
+# Is the full model fit better than that of the basic model?
+anova(mod2.basic, mod2.full)
+
+# Diagnostic plots
+## Residuals vs fitted
+plot(fitted(mod2.full), residuals(mod2.full), main = 'Residuals vs fitted')
+abline(h = 0, col = 'red', lwd = 2)
+
+## Residuals vs mixed model index
+plot(residuals(mod2.full), main = 'Residuals vs mixed model index')
+abline(h = 0, col = 'red', lwd = 2)
+
+## Distribution of residuals
+histDist(residuals(mod2.full), 
+         main = 'Residual density distribution',
+         ylab = 'density')
+
+## QQ plot of residuals
+qqnorm(residuals(mod2.full))
+qqline(residuals(mod2.full), col = 'red', lwd = 2)
+```
+
+### GAM using raw VAS scores, with beta-regression link
+```{r gamVAS}
+## Mixed model general additive model based on an expanded 
+## (includes 0 and 1) beta distribution (mod3)
+## with variable slope and intercept
+### Null model
+mod3.null <- gamlss(score ~ 1 + re(random = ~time|id), 
+                     data = ischaemia_analysis,
+                     family = BEINF)
+summary(mod3.null)
+### Basic model (no intervention)
+mod3.basic <- gamlss(score ~ time + re(random = ~time|id), 
+                     data = ischaemia_analysis,
+                     family = BEINF)
+summary(mod3.basic)
+### Full model (time and intervention)
+mod3.full <- gamlss(score ~ time + period + re(random = ~time|id), 
+                     data = ischaemia_analysis,
+                     family = BEINF)
+summary(mod3.full)
+
+## To determine whether there is a difference between fragmentation nights
+## 1 and 2, reorder 'period' factor so that fragmentation2 is the 
+## reference factor
+ischaemia.analysis_frag2ref <- ischaemia_analysis %>%
+    mutate(period = factor(period, 
+                           levels = c('fragmentation2',
+                                      'fragmentation1',
+                                      'baseline'),
+                           labels = c('fragmentation2',
+                                      'fragmentation1',
+                                      'baseline')))
+mod3.full_frag2ref <- gamlss(score ~ time + period + re(random = ~time|id), 
+                     data = ischaemia.analysis_frag2ref,
+                     family = BEINF)
+summary(mod3.full_frag2ref)
+
+# Choose model
+## Inspect generalised AIC 
+GAIC(mod3.null, mod3.basic, mod3.full, mod3.full_frag2ref)
+## Likelihood Ratio test for nested GAMLSS models
+### Is the basic model fit better than that of the null model?
+LR.test(mod3.basic, mod3.null)
+### Is the full model fit better than that of the null model?
+LR.test(mod3.null, mod3.full)
+### Is the full model fit better than that of the basic model?
+LR.test(mod3.basic, mod3.full)
+
+# Diagnostic plots
+## Residuals vs fitted
+plot(fitted(mod3.full), residuals(mod3.full), main = 'Residuals vs fitted')
+abline(h = 0, col = 'red', lwd = 2)
+
+## Residuals vs mixed model index
+plot(residuals(mod3.full), main = 'Residuals vs mixed model index')
+abline(h = 0, col = 'red', lwd = 2)
+
+## Distribution of residuals
+histDist(residuals(mod3.full), 
+         main = 'Residual density distribution',
+         ylab = 'density')
+
+## QQ plot of residuals
+qqnorm(residuals(mod3.full))
+qqline(residuals(mod3.full), col = 'red', lwd = 2)
+```
+
+## Session information
+```{r sessionInfo}
+sessionInfo()
+```

@@ -1,0 +1,323 @@
+---
+output: 
+    md_document:
+        variant: markdown_github
+---
+
+# Other effects of sleep fragmentation
+
+### Authors: Stella Iacovides & Peter Kamerman
+
+**Date: `r format(Sys.time(), "%B %d, %Y")`**
+
+***
+
+## Load required packages and set chunk options
+```{r LoadPackages, message = FALSE}
+# Load packages
+library(ggplot2)
+library(scales)
+library(grid)
+library(cowplot)
+library(knitr)
+library(PMCMR) # pairwise post-hoc for Friedman test
+library(readr)
+library(dplyr)
+library(tidyr)
+
+# Load palette
+cb8.categorical <- c("#0072B2", "#D55E00", "#666666")
+
+# set seed
+set.seed(123)
+
+# knitr chunk options
+opts_chunk$set(echo = FALSE,
+               warning = FALSE,
+               message = FALSE,
+               fig.path = './figures/',
+               fig.width = 7,
+               fig.height = 7,
+               dev = c('png', 'pdf'),
+               tidy = TRUE, 
+               tidy.opts = list(width.cutoff = 65))
+```
+
+## Load data
+```{r importData, echo = TRUE}
+data <- read_csv('./data/other.csv', col_names = T)
+```
+
+### Quick look
+```{r look_Pain}
+# dim(data)
+# names(data)
+# head(data)
+# tail(data)
+glimpse(data)
+summary(data)
+```
+
+### Process data
+```{r processData}
+# Convert id and period to factors
+data <- data %>%
+    mutate(id = factor(id), 
+           period = factor(period)) %>%
+    tbl_df()
+# Divide data into subsets for analysis
+## Touch sensitivity before and after ischaemia
+vonfrey <- data %>%
+    select(id, period, vF.before_mN, vf.during_mN)
+## Pin-prick sensitivity before ischaemia
+pinprick <- data %>%
+    select(id, period, pin.prick_mN)
+## Profile of Mood State (POMS) before sleep (poms.evening), and after sleep (poms.morning)
+poms <- data %>%
+    select(id, period, poms.morning, poms.evening)
+## Pennebaker Inventory of Limbic Languidness (PILL) before sleep (poms.evening), and after sleep (poms.morning)
+pill <- data %>%
+    select(id, period, pill.morning, pill.evening)
+## Sleep quality after sleep (0-100mm VAS)
+sleep.qual <- data %>%
+    select(id, period, sleep.quality)
+## Morning vigilance after sleep (0-100mm VAS)
+morning.vig <- data %>%
+    select(id, period, morning.vigilance)
+```
+
+## Data analysis
+### Sleep quality
+```{r sleepQuality}
+# Plot
+ggplot(sleep.qual, 
+       aes(x = period,
+           y = sleep.quality,
+           colour = period,
+           fill = period)) +
+    geom_boxplot(fatten = 4,
+                 colour = '#666666',
+                 fill = '#666666',
+                 alpha = 0.5) +
+    labs(x = '\nIntervention',
+         y = 'Sleep quality (0-100mm VAS)\n',
+         title = 'Sleep quality\n') +
+    scale_y_continuous(limits = c(0, 100), expand = c(0,0)) +
+    scale_x_discrete(labels = c('Baseline\nnight', 
+                                'Fragmentation\nnight 1',
+                                'Fragmentation\nnight 2')) +
+    theme_cowplot() +
+    theme(legend.position = 'none',
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18))
+# Friedman test
+friedman.test(sleep.quality ~ period | id, data = sleep.qual)
+# Pairwise posthoc 
+posthoc.friedman.conover.test(sleep.quality ~ period | id, 
+                              data = sleep.qual)
+```
+
+### Morning vigilance
+```{r morningVigilance}
+# Plot
+ggplot(morning.vig, 
+       aes(x = period,
+           y = morning.vigilance,
+           colour = period,
+           fill = period)) +
+    geom_boxplot(fatten = 4,
+                 colour = '#666666',
+                 fill = '#666666',
+                 alpha = 0.5) +
+    labs(x = '\nIntervention',
+         y = 'Morning vigilance (0-100mm VAS)\n',
+         title = 'Morning vigilance\n') +
+    scale_y_continuous(limits = c(0, 100), expand = c(0,0)) +
+    scale_x_discrete(labels = c('Baseline\nnight', 
+                                'Fragmentation\nnight 1',
+                                'Fragmentation\nnight 2')) +
+    theme_cowplot() +
+    theme(legend.position = 'none',
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18))
+# Friedman test
+friedman.test(morning.vigilance ~ period | id, data = morning.vig)
+# Pairwise posthoc 
+posthoc.friedman.conover.test(morning.vigilance ~ period | id, 
+                              data = morning.vig)
+```
+
+### Pin-prick
+```{r pinPrick}
+# Plot
+ggplot(pinprick, 
+       aes(x = period,
+           y = pin.prick_mN,
+           colour = period,
+           fill = period)) +
+    geom_boxplot(fatten = 4,
+                 colour = '#666666',
+                 fill = '#666666',
+                 alpha = 0.5) +
+    labs(x = '\nIntervention',
+         y = 'Pin-prick threshold (mN)\n',
+         title = 'Pin-prick theshold\n') +
+    scale_y_continuous(limits = c(0, 550), expand = c(0,0)) +
+    scale_x_discrete(labels = c('Baseline\nnight', 
+                                'Fragmentation\nnight 1',
+                                'Fragmentation\nnight 2')) +
+    theme_cowplot() +
+    theme(legend.position = 'none',
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18))
+# Friedman test
+friedman.test(pin.prick_mN ~ period | id, data = pinprick)
+# Pairwise posthoc 
+posthoc.friedman.conover.test(pin.prick_mN ~ period | id, data = pinprick)
+```
+
+### Profile of Mood States
+```{r poms}
+# Plot
+poms_plot <- poms %>%
+    group_by(id, period) %>%
+    gather(key = time, 
+           value = score, 
+           poms.morning, 
+           poms.evening)
+
+ggplot(poms_plot, 
+       aes(x = period,
+           y = score,
+           colour = time,
+           fill = time)) +
+    geom_boxplot(fatten = 4, alpha = 0.5) +
+    labs(x = '\nIntervention',
+         y = 'Profile of Mood States (POMS) score\n',
+         title = 'Profile of Mood States (POMS)\n') +
+    scale_y_continuous(limits = c(75, 125), 
+                       expand = c(0,0)) +
+    scale_x_discrete(labels = c('Baseline\nnight', 
+                                'Fragmentation\nnight 1',
+                                'Fragmentation\nnight 2')) +
+    scale_fill_manual(name = 'Time',
+                      labels = c('Morning', 'Evening'),
+                      values = cb8.categorical) +
+    scale_colour_manual(name = 'Time',
+                      labels = c('Morning', 'Evening'),
+                      values = cb8.categorical) +
+    theme_cowplot() +
+    theme(legend.position = c(0.9, 0.075),
+          legend.text = element_text(size = 18),
+          legend.title = element_text(size = 18),
+          legend.background = element_rect(fill = 'gray90'),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18))
+# Friedman test - Morning
+friedman.test(poms.morning ~ period | id, data = poms)
+# Pairwise posthoc - Morning
+posthoc.friedman.conover.test(poms.morning ~ period | id, data = poms)
+# Friedman test - Evening
+friedman.test(poms.evening ~ period | id, data = poms)
+# Pairwise posthoc - Evening
+posthoc.friedman.conover.test(poms.evening ~ period | id, data = poms)
+```
+
+### Pennebaker inventory of Limbic Languidness (PILL)
+```{r pennebaker}
+# Plot
+pill_plot <- pill %>%
+    group_by(id, period) %>%
+    select(id, 
+           period, 
+           pill.evening, 
+           pill.morning) %>%
+    gather(key = time, 
+           value = score, 
+           pill.morning, 
+           pill.evening)
+
+ggplot(pill_plot, 
+       aes(x = period,
+           y = score,
+           colour = time,
+           fill = time)) +
+    geom_boxplot(fatten = 4, alpha = 0.5) +
+    labs(x = '\nIntervention',
+         y = 'PILL score\n',
+         title = 'Pennebaker Inventory of Limbic Languidness (PILL)\n') +
+    scale_y_continuous(limits = c(-0.1, 3), 
+                       expand = c(0,0)) +
+    scale_x_discrete(labels = c('Baseline\nnight', 
+                                'Fragmentation\nnight 1',
+                                'Fragmentation\nnight 2')) +
+    scale_fill_manual(name = 'Time',
+                      labels = c('Morning', 'Evening'),
+                      values = cb8.categorical) +
+    scale_colour_manual(name = 'Time',
+                      labels = c('Morning', 'Evening'),
+                      values = cb8.categorical) +
+    theme_cowplot() +
+    theme(legend.position = c(0.12, 0.90),
+          legend.text = element_text(size = 18),
+          legend.title = element_text(size = 18),
+          legend.background = element_rect(fill = 'gray90'),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18))
+# Friedman test - Morning
+friedman.test(pill.morning ~ period | id, data = pill)
+# Friedman test - Evening
+friedman.test(pill.evening ~ period | id, data = pill)
+```
+
+### von Frey
+```{r vfrey}
+# Plot
+vf_plot <- vonfrey %>%
+    group_by(id, period) %>%
+    gather(key = time,
+           value = score, 
+           vF.before_mN, 
+           vf.during_mN)
+
+ggplot(vf_plot, 
+       aes(x = period,
+           y = score,
+           colour = time,
+           fill = time)) +
+    geom_boxplot(fatten = 4, alpha = 0.5) +
+    labs(x = '\nIntervention',
+         y = 'von Frey threshold (mN)\n',
+         title = 'von Frey threshold\n') +
+    scale_y_continuous(limits = c(0, 65), 
+                       expand = c(0,0)) +
+    scale_x_discrete(labels = c('Baseline\nnight', 
+                                'Fragmentation\nnight 1',
+                                'Fragmentation\nnight 2')) +
+    scale_fill_manual(name = 'Time',
+                      labels = c('Morning', 'Evening'),
+                      values = cb8.categorical) +
+    scale_colour_manual(name = 'Time',
+                        labels = c('Morning', 'Evening'),
+                        values = cb8.categorical) +
+    theme_cowplot() +
+    theme(legend.position = c(0.12, 0.90),
+          legend.text = element_text(size = 18),
+          legend.title = element_text(size = 18),
+          legend.background = element_rect(fill = 'gray90'),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18))
+# Friedman test - Before
+friedman.test(vF.before_mN ~ period | id, data = vonfrey)
+```
+
+## Session information
+```{r sessionInfo}
+sessionInfo()
+```
