@@ -1,4 +1,4 @@
-# SleepFragmentation
+# Effect of sleep fragmentation on pain sensitivity
 
 ## Bibliographic information
 [to be added after publication]
