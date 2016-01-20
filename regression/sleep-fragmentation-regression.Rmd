@@ -370,7 +370,7 @@ boot_func <- function(data, d){
 ## Baseline
 baseline_out <- boot(delta$baseline, boot_func, R = 10000)
 baseline_ci <- boot.ci(baseline_out, type = 'norm')
-cat(paste0("# Baseline night\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: ", 
+cat(paste0("# Baseline night\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
        round(mean(baseline_out$t0)), "mm",
        " (", round(baseline_ci$normal[2]), " to ",
        round(baseline_ci$normal[3]), ")"))
@@ -378,7 +378,7 @@ plot(baseline_out)
 ## fragmentation 1
 frag1_out <- boot(delta$fragmentation1, boot_func, R = 10000)
 frag1_ci <- boot.ci(frag1_out, type = 'norm')
-cat(paste0("# One night of sleep fragmentation\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: ", 
+cat(paste0("# One night of sleep fragmentation\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
        round(mean(frag1_out$t0)), "mm",
        " (", round(frag1_ci$normal[2]), " to ",
        round(frag1_ci$normal[3]), ")"))
@@ -386,7 +386,7 @@ plot(frag1_out)
 ## fragmentation 2
 frag2_out <- boot(delta$fragmentation2, boot_func, R = 10000)
 frag2_ci <- boot.ci(frag2_out, type = 'norm')
-cat(paste0("# Two nights of sleep fragmentation\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: ", 
+cat(paste0("# Two nights of sleep fragmentation\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
        round(mean(frag2_out$t0)), "mm",
        " (", round(frag2_ci$normal[2]), " to ",
        round(frag2_ci$normal[3]), ")"))
