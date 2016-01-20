@@ -3,7 +3,7 @@ Regression
 
 ### Authors: Stella Iacovides & Peter Kamerman
 
-**Date: December 10, 2015**
+**Date: January 20, 2016**
 
 ------------------------------------------------------------------------
 
@@ -25,6 +25,7 @@ library(pander)
 library(readr)
 library(dplyr)
 library(tidyr)
+library(boot)
 
 # Load palette
 cb8.categorical <- c("#0072B2", "#D55E00", "#009E73", "#F0E442", "#56B4E9", "#E69F00", "#CC79A7", "#999999")
@@ -690,12 +691,33 @@ Regression analysis
 
 ![](./figures/gamVAS-4.png)
 
+Effect size
+-----------
+
+    ## # Baseline night
+    ## 
+    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: 25mm (13 to 36)
+
+![](./figures/effectSize-1.png)
+
+    ## # One night of sleep fragmentation
+    ## 
+    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: 10mm (-2 to 23)
+
+![](./figures/effectSize-2.png)
+
+    ## # Two nights of sleep fragmentation
+    ## 
+    ## Bootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a ten-minute period following removal of a torniquet: 10mm (4 to 17)
+
+![](./figures/effectSize-3.png)
+
 Session information
 -------------------
 
-    ## R version 3.2.2 (2015-08-14)
+    ## R version 3.2.3 (2015-12-10)
     ## Platform: x86_64-apple-darwin13.4.0 (64-bit)
-    ## Running under: OS X 10.11.1 (El Capitan)
+    ## Running under: OS X 10.11.2 (El Capitan)
     ## 
     ## locale:
     ## [1] C
@@ -705,17 +727,17 @@ Session information
     ##  [8] datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] tidyr_0.3.1       dplyr_0.4.3       readr_0.2.2      
-    ##  [4] pander_0.6.0      knitr_1.11        gamlss_4.3-6     
-    ##  [7] gamlss.dist_4.3-5 MASS_7.3-45       gamlss.data_4.3-0
-    ## [10] nlme_3.1-122      metafor_1.9-8     Matrix_1.2-2     
-    ## [13] PMCMR_3.0         cowplot_0.5.0     scales_0.3.0     
-    ## [16] ggplot2_1.0.1    
+    ##  [1] boot_1.3-17       tidyr_0.3.1       dplyr_0.4.3      
+    ##  [4] readr_0.2.2       pander_0.6.0      knitr_1.11       
+    ##  [7] gamlss_4.3-6      gamlss.dist_4.3-5 MASS_7.3-45      
+    ## [10] gamlss.data_4.3-0 nlme_3.1-122      metafor_1.9-8    
+    ## [13] Matrix_1.2-3      PMCMR_4.0         cowplot_0.6.0    
+    ## [16] scales_0.3.0      ggplot2_2.0.0    
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] Rcpp_0.12.2      formatR_1.2.1    plyr_1.8.3       tools_3.2.2     
+    ##  [1] Rcpp_0.12.2      formatR_1.2.1    plyr_1.8.3       tools_3.2.3     
     ##  [5] digest_0.6.8     evaluate_0.8     gtable_0.1.2     lattice_0.20-33 
-    ##  [9] DBI_0.3.1        yaml_2.1.13      proto_0.3-10     stringr_1.0.0   
-    ## [13] R6_2.1.1         survival_2.38-3  rmarkdown_0.8.1  reshape2_1.4.1  
-    ## [17] magrittr_1.5     htmltools_0.2.6  assertthat_0.1   colorspace_1.2-6
-    ## [21] labeling_0.3     stringi_1.0-1    lazyeval_0.1.10  munsell_0.4.2
+    ##  [9] DBI_0.3.1        yaml_2.1.13      stringr_1.0.0    R6_2.1.1        
+    ## [13] survival_2.38-3  rmarkdown_0.9.2  reshape2_1.4.1   magrittr_1.5    
+    ## [17] htmltools_0.3    assertthat_0.1   colorspace_1.2-6 labeling_0.3    
+    ## [21] stringi_1.0-1    lazyeval_0.1.10  munsell_0.4.2
