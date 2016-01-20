@@ -1,6 +1,6 @@
 # Other effects of sleep fragmentation
 
-This repository contains the analytical [data](./data/Other.csv), [data analysis scripts](SleepFragmentation_Other.Rmd), and the [markdown document](SleepFragmentation_Other.md) and [figure](./figures/) outputs produced by the analysis scripts. The analysis shows summary plots, and the outputs of statistical analyses assessing the effects of two successive nights of sleep fragmentation on:  
+This repository contains the analytical [data](./data/other.csv), [data analysis scripts](sleep-fragmentation-other.Rmd), and the [markdown document](sleep-fragmentation-other.md) and [figure](./figures/) outputs produced by the analysis scripts. The analysis shows summary plots, and the outputs of statistical analyses assessing the effects of two successive nights of sleep fragmentation on:  
 
 1. Touch sensitivity using graded von Frey hairs before (assessing baseline sensitivity) and after (assessing whether ischaemia produced anaesthesia) forearm ischaemia;  
 2. Pin-prick sensitivity using graded pin-prick intensities before ischaemia;  
