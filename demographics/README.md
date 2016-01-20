@@ -1,6 +1,6 @@
 ## Demographic information
 
-This repository contains the analytical [data](./data/Demographics.csv), [data analysis scripts](SleepFragmentation_Demographics.Rmd), and the [markdown document](SleepFragmentation_Demographics.md) and [figure](./figures/) outputs produced by the analysis scripts for summaries of basic demographic information, and information on participant menstrual cycles, sleep quality, and general health. 
+This repository contains the analytical [data](./data/demographics.csv), [data analysis scripts](sleep-fragmentation-demographics.Rmd), and the [markdown document](sleep-fragmentation-demographics.md) and [figure](./figures/) outputs produced by the analysis scripts for summaries of basic demographic information, and information on participant menstrual cycles, sleep quality, and general health. 
 
 Summary data include five-number summary statistics and a plot for each variable. All plots include a box-and-whisker summary plot with a superimposed scatterplot of individual data points.  
 
