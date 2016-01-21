@@ -50,7 +50,7 @@ opts_chunk$set(echo = TRUE,
 
 ## Load data
 ```{r import_pain}
-data <- read_csv('./data/regression.csv', col_names = T)
+data <- read_csv('./data/regression.csv')
 ```
 
 ## Quick look
@@ -68,8 +68,7 @@ glimpse(data)
 # Convert id and period to factors
 ischaemia <- data %>%
     mutate(id = factor(id), 
-           period = factor(period)) %>%
-    tbl_df()
+           period = factor(period))
 
 # Convert to long format table
 ischaemia_analysis <- ischaemia %>%
