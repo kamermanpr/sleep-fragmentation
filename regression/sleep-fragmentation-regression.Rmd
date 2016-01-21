@@ -87,6 +87,7 @@ ischaemia_plot <- ischaemia %>%
 
 ## Process data for facetPanel plot 
 ischaemia_plot.f <- ischaemia_plot %>%
+    ungroup() %>%
     mutate(period = factor(period,
                            levels = c('baseline',
                                       'fragmentation1',
@@ -312,6 +313,7 @@ summary(mod3.full)
 ## 1 and 2, reorder 'period' factor so that fragmentation2 is the 
 ## reference factor
 ischaemia.analysis_frag2ref <- ischaemia_analysis %>%
+    ungroup() %>%
     mutate(period = factor(period, 
                            levels = c('fragmentation2',
                                       'fragmentation1',
@@ -383,7 +385,7 @@ delta <- ischaemia %>%
 
 # Boot function
 boot_func <- function(data, d){
-    median(data[d])
+    mean(data[d])
 } 
 # 95% CI
 ## Baseline

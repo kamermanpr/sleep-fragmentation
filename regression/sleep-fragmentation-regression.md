@@ -3,7 +3,7 @@ Regression
 
 ### Authors: Stella Iacovides & Peter Kamerman
 
-**Date: January 20, 2016**
+**Date: January 21, 2016**
 
 ------------------------------------------------------------------------
 
@@ -20,12 +20,13 @@ library(PMCMR) # pairwise Friedman posthoc tests
 library(metafor) # arcsine transform
 library(nlme) # mixed effect 'lme'
 library(gamlss) # GAM using beta distribution
+library(lsr) # Cohen's D
 library(knitr)
 library(pander)
 library(readr)
 library(dplyr)
 library(tidyr)
-library(boot)
+library(boot) # Bootstrap 95% CI
 
 # Load palette
 cb8.categorical <- c("#0072B2", "#D55E00", "#009E73", "#F0E442", "#56B4E9", "#E69F00", "#CC79A7", "#999999")
@@ -34,7 +35,7 @@ cb8.categorical <- c("#0072B2", "#D55E00", "#009E73", "#F0E442", "#56B4E9", "#E6
 set.seed(123)
 
 # knitr chunk options
-opts_chunk$set(echo = FALSE,
+opts_chunk$set(echo = TRUE,
                warning = FALSE,
                message = FALSE,
                fig.path = './figures/',
@@ -49,11 +50,16 @@ Load data
 ---------
 
 ``` r
-data <- read_csv("./data/regression.csv", col_names = T)
+data <- read_csv("./data/regression.csv")
 ```
 
 Quick look
 ----------
+
+``` r
+# dim(data) names(data) head(data) tail(data)
+glimpse(data)
+```
 
     ## Observations: 33
     ## Variables: 13
@@ -71,51 +77,81 @@ Quick look
     ## $ 9      (int) 49, 61, 39, 84, 71, 61, 75, 39, 66, 52, 30, 48, 64, 84,...
     ## $ 10     (int) 38, 59, 32, 79, 73, 62, 74, 36, 84, 49, 27, 43, 73, 84,...
 
-    ##       id               period                0                1         
-    ##  Length:33          Length:33          Min.   : 54.00   Min.   : 53.00  
-    ##  Class :character   Class :character   1st Qu.: 76.00   1st Qu.: 71.00  
-    ##  Mode  :character   Mode  :character   Median : 83.00   Median : 78.00  
-    ##                                        Mean   : 81.45   Mean   : 79.33  
-    ##                                        3rd Qu.: 86.00   3rd Qu.: 86.00  
-    ##                                        Max.   :100.00   Max.   :100.00  
-    ##        2                3               4               5     
-    ##  Min.   : 49.00   Min.   :50.00   Min.   :42.00   Min.   :45  
-    ##  1st Qu.: 70.00   1st Qu.:68.00   1st Qu.:72.00   1st Qu.:64  
-    ##  Median : 80.00   Median :81.00   Median :77.00   Median :78  
-    ##  Mean   : 77.48   Mean   :77.33   Mean   :75.36   Mean   :75  
-    ##  3rd Qu.: 85.00   3rd Qu.:86.00   3rd Qu.:86.00   3rd Qu.:88  
-    ##  Max.   :100.00   Max.   :96.00   Max.   :99.00   Max.   :99  
-    ##        6            7               8               9        
-    ##  Min.   :39   Min.   :32.00   Min.   :36.00   Min.   :30.00  
-    ##  1st Qu.:66   1st Qu.:62.00   1st Qu.:58.00   1st Qu.:60.00  
-    ##  Median :75   Median :76.00   Median :69.00   Median :71.00  
-    ##  Mean   :72   Mean   :71.15   Mean   :68.94   Mean   :67.33  
-    ##  3rd Qu.:84   3rd Qu.:82.00   3rd Qu.:81.00   3rd Qu.:79.00  
-    ##  Max.   :98   Max.   :97.00   Max.   :95.00   Max.   :93.00  
-    ##        10       
-    ##  Min.   :27.00  
-    ##  1st Qu.:58.00  
-    ##  Median :73.00  
-    ##  Mean   :66.42  
-    ##  3rd Qu.:82.00  
-    ##  Max.   :91.00
+``` r
+# summary(data)
+```
 
 Process data
 ------------
+
+``` r
+# Convert id and period to factors
+ischaemia <- data %>% mutate(id = factor(id), period = factor(period))
+
+# Convert to long format table
+ischaemia_analysis <- ischaemia %>% group_by(id, period) %>% gather(key = time, 
+    value = score, 3:13) %>% mutate(time = as.numeric(as.character(time)), 
+    score = score/100)
+
+# Process data for singlePanel plot
+ischaemia_plot <- ischaemia %>% group_by(id, period) %>% gather(key = time, 
+    value = score, 3:13) %>% mutate(time = as.numeric(as.character(time)))
+
+## Process data for facetPanel plot
+ischaemia_plot.f <- ischaemia_plot %>% ungroup() %>% mutate(period = factor(period, 
+    levels = c("baseline", "fragmentation1", "fragmentation2"), labels = c("Baseline night", 
+        "Fragmentation night 1", "Fragmentation night 2")))
+```
 
 Data analysis
 -------------
 
 ### Plot the data
 
-![](./figures/singlePanel-1.png)
+``` r
+# Plot a single panel plot of all data
+ggplot(ischaemia_plot, aes(x = time, y = score, colour = period, fill = period)) + 
+    geom_smooth(method = "loess", alpha = 0.5, size = 2) + labs(x = "\nTime (minutes)", 
+    y = "Pain intensity (0-100mm VAS)\n", title = "Pain intensity for 10 minutes after ischaemia\n") + 
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) + scale_x_continuous(limits = c(0, 
+    10), expand = c(0, 0), breaks = c(0, 2, 4, 6, 8, 10), labels = c(0, 
+    2, 4, 6, 8, 10)) + scale_fill_manual(name = "Intervention", labels = c("Baseline night", 
+    "Fragmentation night 1", "Fragmentation night 2"), values = cb8.categorical) + 
+    scale_colour_manual(name = "Intervention", labels = c("Baseline night", 
+        "Fragmentation night 1", "Fragmentation night 2"), values = cb8.categorical) + 
+    theme_cowplot() + theme(legend.position = c(0.78, 0.12), legend.text = element_text(size = 18), 
+    legend.title = element_text(size = 18), legend.background = element_rect(fill = "gray90"), 
+    axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+    plot.title = element_text(size = 18))
+```
+
+![](./figures/singlePlot-1.png)
+
+``` r
+# Multi-facet plot of all data
+ggplot(ischaemia_plot.f, aes(x = time, y = score, colour = period, 
+    fill = period)) + geom_smooth(method = "loess", alpha = 0.5, size = 2) + 
+    geom_jitter() + facet_grid(period ~ .) + labs(x = "\nTime (minutes)", 
+    y = "Pain intensity (0-100mm VAS)\n", title = "Facet plot: pain intensity for 10 minutes after ischaemia\n") + 
+    scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) + scale_x_continuous(limits = c(0, 
+    10), expand = c(0, 0), breaks = c(0, 2, 4, 6, 8, 10), labels = c(0, 
+    2, 4, 6, 8, 10)) + scale_fill_manual(name = "Intervention", labels = c("Baseline night", 
+    "Fragmentation night 1", "Fragmentation night 2"), values = cb8.categorical) + 
+    scale_colour_manual(name = "Intervention", labels = c("Baseline night", 
+        "Fragmentation night 1", "Fragmentation night 2"), values = cb8.categorical) + 
+    theme_cowplot() + theme(legend.position = "none", panel.margin.y = unit(1, 
+    "lines"), axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+    plot.title = element_text(size = 18))
+```
 
 ![](./figures/facetPlot-1.png)
+ \#\# Regression analysis \#\#\# Raw VAS scores
 
-Regression analysis
--------------------
-
-### Raw VAS scores
+``` r
+# Check data distribution
+histDist(ischaemia_analysis$score, main = "Density plot of raw VAS scores\n(expressed as a proportion)", 
+    xlab = "VAS", ylab = "Denisty")
+```
 
 ![](./figures/rawVAS-1.png)
 
@@ -135,6 +171,14 @@ Regression analysis
     ## Global Deviance:     -355.091 
     ##             AIC:     -351.091 
     ##             SBC:     -343.303
+
+``` r
+## Linear mixed model of raw VAS score (mod1) with variable slope
+## and intercept Null model
+mod1.null <- lme(score ~ 1, random = ~time | id, data = ischaemia_analysis, 
+    method = "ML")
+summary(mod1.null)
+```
 
     ## Linear mixed-effects model fit by maximum likelihood
     ##  Data: ischaemia_analysis 
@@ -159,6 +203,13 @@ Regression analysis
     ## 
     ## Number of Observations: 363
     ## Number of Groups: 11
+
+``` r
+### Basic model (no intervention)
+mod1.basic <- lme(score ~ time, random = ~time | id, data = ischaemia_analysis, 
+    method = "ML")
+summary(mod1.basic)
+```
 
     ## Linear mixed-effects model fit by maximum likelihood
     ##  Data: ischaemia_analysis 
@@ -187,6 +238,13 @@ Regression analysis
     ## 
     ## Number of Observations: 363
     ## Number of Groups: 11
+
+``` r
+### Full model (time + intervention)
+mod1.full <- lme(score ~ time + period, random = ~time | id, data = ischaemia_analysis, 
+    method = "ML")
+summary(mod1.full)
+```
 
     ## Linear mixed-effects model fit by maximum likelihood
     ##  Data: ischaemia_analysis 
@@ -220,19 +278,56 @@ Regression analysis
     ## Number of Observations: 363
     ## Number of Groups: 11
 
+``` r
+# Is the basic model fit better than that of the null model?
+anova(mod1.null, mod1.basic)
+```
+
     ##            Model df       AIC       BIC   logLik   Test L.Ratio p-value
     ## mod1.null      1  5 -465.6643 -446.1923 237.8322                       
     ## mod1.basic     2  6 -473.9360 -450.5696 242.9680 1 vs 2 10.2717  0.0014
+
+``` r
+# Is the basic model fit better than that of the null model?
+anova(mod1.null, mod1.full)
+```
 
     ##           Model df       AIC       BIC   logLik   Test  L.Ratio p-value
     ## mod1.null     1  5 -465.6643 -446.1923 237.8322                        
     ## mod1.full     2  8 -565.8279 -534.6727 290.9139 1 vs 2 106.1636  <.0001
 
+``` r
+# Is the basic model fit better than that of the basic model?
+anova(mod1.basic, mod1.full)
+```
+
     ##            Model df       AIC       BIC   logLik   Test  L.Ratio p-value
     ## mod1.basic     1  6 -473.9360 -450.5696 242.9680                        
     ## mod1.full      2  8 -565.8279 -534.6727 290.9139 1 vs 2 95.89187  <.0001
 
-![](./figures/rawVAS-2.png) ![](./figures/rawVAS-3.png) ![](./figures/rawVAS-4.png)
+``` r
+# Diagnostic plots Residuals vs fitted
+plot(fitted(mod1.full), residuals(mod1.full), main = "Residuals vs fitted")
+abline(h = 0, col = "red", lwd = 2)
+```
+
+![](./figures/rawVAS-2.png)
+
+``` r
+## Residuals vs mixed model index
+plot(residuals(mod1.full), main = "Residuals vs mixed model index")
+abline(h = 0, col = "red", lwd = 2)
+```
+
+![](./figures/rawVAS-3.png)
+
+``` r
+## Distribution of residuals
+histDist(residuals(mod1.full), main = "Residual density distribution", 
+    ylab = "density")
+```
+
+![](./figures/rawVAS-4.png)
 
     ## 
     ## Family:  c("NO", "Normal") 
@@ -250,9 +345,24 @@ Regression analysis
     ##             AIC:     -645.243 
     ##             SBC:     -637.454
 
-![](./figures/rawVAS-5.png)
+``` r
+## QQ plot of residuals
+qqnorm(residuals(mod1.full))
+qqline(residuals(mod1.full), col = "red", lwd = 2)
+```
 
-### Arcsine transformed VAS scores
+![](./figures/rawVAS-5.png)
+ \#\#\# Arcsine transformed VAS scores
+
+``` r
+# Create new column with VAS data transformed using arcsine square
+# root transform
+ischaemia_analysis <- ischaemia_analysis %>% mutate(score.arcsine = transf.arcsin(score))
+
+# Check data distribution
+histDist(ischaemia_analysis$score.arcsine, main = "Density plot of arcsine transformed VAS scores", 
+    xlab = "VAS", ylab = "Denisty")
+```
 
 ![](./figures/arcsineVAS-1.png)
 
@@ -273,6 +383,14 @@ Regression analysis
     ## Global Deviance:     -210.97 
     ##             AIC:     -206.97 
     ##             SBC:     -199.181
+
+``` r
+## Linear mixed model of arcsine transformed VAS scores (mod2) with
+## variable slope and intercept Null model
+mod2.null <- lme(score.arcsine ~ 1, random = ~time | id, data = ischaemia_analysis, 
+    method = "ML")
+summary(mod2.null)
+```
 
     ## Linear mixed-effects model fit by maximum likelihood
     ##  Data: ischaemia_analysis 
@@ -297,6 +415,13 @@ Regression analysis
     ## 
     ## Number of Observations: 363
     ## Number of Groups: 11
+
+``` r
+### Basic model (no intervention)
+mod2.basic <- lme(score.arcsine ~ time, random = ~time | id, data = ischaemia_analysis, 
+    method = "ML")
+summary(mod2.basic)
+```
 
     ## Linear mixed-effects model fit by maximum likelihood
     ##  Data: ischaemia_analysis 
@@ -325,6 +450,13 @@ Regression analysis
     ## 
     ## Number of Observations: 363
     ## Number of Groups: 11
+
+``` r
+### Full model (time and intervention)
+mod2.full <- lme(score.arcsine ~ time + period, random = ~time | id, 
+    data = ischaemia_analysis, method = "ML")
+summary(mod2.full)
+```
 
     ## Linear mixed-effects model fit by maximum likelihood
     ##  Data: ischaemia_analysis 
@@ -358,19 +490,56 @@ Regression analysis
     ## Number of Observations: 363
     ## Number of Groups: 11
 
+``` r
+# Is the basic model fit better than that of the null model?
+anova(mod2.null, mod2.basic)
+```
+
     ##            Model df       AIC       BIC   logLik   Test  L.Ratio p-value
     ## mod2.null      1  5 -339.1776 -319.7056 174.5888                        
     ## mod2.basic     2  6 -345.9381 -322.5717 178.9691 1 vs 2 8.760476  0.0031
+
+``` r
+# Is the full model fit better than that of the null model?
+anova(mod2.null, mod2.full)
+```
 
     ##           Model df       AIC       BIC   logLik   Test  L.Ratio p-value
     ## mod2.null     1  5 -339.1776 -319.7056 174.5888                        
     ## mod2.full     2  8 -443.0052 -411.8499 229.5026 1 vs 2 109.8275  <.0001
 
+``` r
+# Is the full model fit better than that of the basic model?
+anova(mod2.basic, mod2.full)
+```
+
     ##            Model df       AIC       BIC   logLik   Test L.Ratio p-value
     ## mod2.basic     1  6 -345.9381 -322.5717 178.9691                       
     ## mod2.full      2  8 -443.0052 -411.8499 229.5026 1 vs 2 101.067  <.0001
 
-![](./figures/arcsineVAS-2.png) ![](./figures/arcsineVAS-3.png) ![](./figures/arcsineVAS-4.png)
+``` r
+# Diagnostic plots Residuals vs fitted
+plot(fitted(mod2.full), residuals(mod2.full), main = "Residuals vs fitted")
+abline(h = 0, col = "red", lwd = 2)
+```
+
+![](./figures/arcsineVAS-2.png)
+
+``` r
+## Residuals vs mixed model index
+plot(residuals(mod2.full), main = "Residuals vs mixed model index")
+abline(h = 0, col = "red", lwd = 2)
+```
+
+![](./figures/arcsineVAS-3.png)
+
+``` r
+## Distribution of residuals
+histDist(residuals(mod2.full), main = "Residual density distribution", 
+    ylab = "density")
+```
+
+![](./figures/arcsineVAS-4.png)
 
     ## 
     ## Family:  c("NO", "Normal") 
@@ -388,9 +557,22 @@ Regression analysis
     ##             AIC:     -528.466 
     ##             SBC:     -520.677
 
-![](./figures/arcsineVAS-5.png)
+``` r
+## QQ plot of residuals
+qqnorm(residuals(mod2.full))
+qqline(residuals(mod2.full), col = "red", lwd = 2)
+```
 
-### GAM using raw VAS scores, with beta-regression link
+![](./figures/arcsineVAS-5.png)
+ \#\#\# GAM using raw VAS scores, with beta-regression link
+
+``` r
+## Mixed model general additive model based on an expanded
+## (includes 0 and 1) beta distribution (mod3) with variable slope
+## and intercept Null model
+mod3.null <- gamlss(score ~ 1 + re(random = ~time | id), data = ischaemia_analysis, 
+    family = BEINF)
+```
 
     ## GAMLSS-RS iteration 1: Global Deviance = -484.9438 
     ## GAMLSS-RS iteration 2: Global Deviance = -563.5008 
@@ -398,6 +580,10 @@ Regression analysis
     ## GAMLSS-RS iteration 4: Global Deviance = -566.5581 
     ## GAMLSS-RS iteration 5: Global Deviance = -566.5621 
     ## GAMLSS-RS iteration 6: Global Deviance = -566.5624
+
+``` r
+summary(mod3.null)
+```
 
     ## *******************************************************************
     ## Family:  c("BEINF", "Beta Inflated") 
@@ -453,12 +639,22 @@ Regression analysis
     ##             SBC:     -426.5097 
     ## *******************************************************************
 
+``` r
+### Basic model (no intervention)
+mod3.basic <- gamlss(score ~ time + re(random = ~time | id), data = ischaemia_analysis, 
+    family = BEINF)
+```
+
     ## GAMLSS-RS iteration 1: Global Deviance = -483.7969 
     ## GAMLSS-RS iteration 2: Global Deviance = -560.9467 
     ## GAMLSS-RS iteration 3: Global Deviance = -563.586 
     ## GAMLSS-RS iteration 4: Global Deviance = -563.6756 
     ## GAMLSS-RS iteration 5: Global Deviance = -563.6768 
     ## GAMLSS-RS iteration 6: Global Deviance = -563.6772
+
+``` r
+summary(mod3.basic)
+```
 
     ## *******************************************************************
     ## Family:  c("BEINF", "Beta Inflated") 
@@ -515,12 +711,22 @@ Regression analysis
     ##             SBC:     -434.486 
     ## *******************************************************************
 
+``` r
+### Full model (time and intervention)
+mod3.full <- gamlss(score ~ time + period + re(random = ~time | id), 
+    data = ischaemia_analysis, family = BEINF)
+```
+
     ## GAMLSS-RS iteration 1: Global Deviance = -543.4586 
     ## GAMLSS-RS iteration 2: Global Deviance = -655.4316 
     ## GAMLSS-RS iteration 3: Global Deviance = -659.1856 
     ## GAMLSS-RS iteration 4: Global Deviance = -659.2752 
     ## GAMLSS-RS iteration 5: Global Deviance = -659.2693 
     ## GAMLSS-RS iteration 6: Global Deviance = -659.2694
+
+``` r
+summary(mod3.full)
+```
 
     ## *******************************************************************
     ## Family:  c("BEINF", "Beta Inflated") 
@@ -578,12 +784,28 @@ Regression analysis
     ##             SBC:     -511.7879 
     ## *******************************************************************
 
+``` r
+## To determine whether there is a difference between fragmentation
+## nights 1 and 2, reorder 'period' factor so that fragmentation2
+## is the reference factor
+ischaemia.analysis_frag2ref <- ischaemia_analysis %>% ungroup() %>% 
+    mutate(period = factor(period, levels = c("fragmentation2", "fragmentation1", 
+        "baseline"), labels = c("fragmentation2", "fragmentation1", 
+        "baseline")))
+mod3.full_frag2ref <- gamlss(score ~ time + period + re(random = ~time | 
+    id), data = ischaemia.analysis_frag2ref, family = BEINF)
+```
+
     ## GAMLSS-RS iteration 1: Global Deviance = -543.4586 
     ## GAMLSS-RS iteration 2: Global Deviance = -655.4316 
     ## GAMLSS-RS iteration 3: Global Deviance = -659.1856 
     ## GAMLSS-RS iteration 4: Global Deviance = -659.2752 
     ## GAMLSS-RS iteration 5: Global Deviance = -659.2693 
     ## GAMLSS-RS iteration 6: Global Deviance = -659.2694
+
+``` r
+summary(mod3.full_frag2ref)
+```
 
     ## *******************************************************************
     ## Family:  c("BEINF", "Beta Inflated") 
@@ -641,11 +863,22 @@ Regression analysis
     ##             SBC:     -511.7879 
     ## *******************************************************************
 
+``` r
+# Choose model Inspect generalised AIC
+GAIC(mod3.null, mod3.basic, mod3.full, mod3.full_frag2ref)
+```
+
     ##                          df       AIC
     ## mod3.full          25.02059 -609.2282
     ## mod3.full_frag2ref 25.02059 -609.2282
     ## mod3.basic         21.91761 -519.8420
     ## mod3.null          23.76029 -519.0418
+
+``` r
+## Likelihood Ratio test for nested GAMLSS models Is the basic
+## model fit better than that of the null model?
+LR.test(mod3.basic, mod3.null)
+```
 
     ##  Likelihood Ratio Test for nested GAMLSS models. 
     ##  (No check whether the models are nested is performed). 
@@ -655,6 +888,11 @@ Regression analysis
     ##  
     ##  LRT = 2.885247 with 1.842682 deg. of freedom and p-value= 0.2105444
 
+``` r
+### Is the full model fit better than that of the null model?
+LR.test(mod3.null, mod3.full)
+```
+
     ##  Likelihood Ratio Test for nested GAMLSS models. 
     ##  (No check whether the models are nested is performed). 
     ##  
@@ -662,6 +900,11 @@ Regression analysis
     ##  Altenative model: deviance= -659.2694 with  25.02059 deg. of freedom 
     ##  
     ##  LRT = 92.70694 with 1.2603 deg. of freedom and p-value= 0
+
+``` r
+### Is the full model fit better than that of the basic model?
+LR.test(mod3.basic, mod3.full)
+```
 
     ##  Likelihood Ratio Test for nested GAMLSS models. 
     ##  (No check whether the models are nested is performed). 
@@ -671,7 +914,29 @@ Regression analysis
     ##  
     ##  LRT = 95.59219 with 3.102982 deg. of freedom and p-value= 0
 
-![](./figures/gamVAS-1.png) ![](./figures/gamVAS-2.png) ![](./figures/gamVAS-3.png)
+``` r
+# Diagnostic plots Residuals vs fitted
+plot(fitted(mod3.full), residuals(mod3.full), main = "Residuals vs fitted")
+abline(h = 0, col = "red", lwd = 2)
+```
+
+![](./figures/gamVAS-1.png)
+
+``` r
+## Residuals vs mixed model index
+plot(residuals(mod3.full), main = "Residuals vs mixed model index")
+abline(h = 0, col = "red", lwd = 2)
+```
+
+![](./figures/gamVAS-2.png)
+
+``` r
+## Distribution of residuals
+histDist(residuals(mod3.full), main = "Residual density distribution", 
+    ylab = "density")
+```
+
+![](./figures/gamVAS-3.png)
 
     ## 
     ## Family:  c("NO", "Normal") 
@@ -689,10 +954,60 @@ Regression analysis
     ##             AIC:     1022.44 
     ##             SBC:     1030.22
 
+``` r
+## QQ plot of residuals
+qqnorm(residuals(mod3.full))
+qqline(residuals(mod3.full), col = "red", lwd = 2)
+```
+
 ![](./figures/gamVAS-4.png)
+ \#\# Differences in pain intensity at t = 0
+
+``` r
+# Determine whether the is a difference in pain intensity at the
+# end of the ischaemia (t = 0) between the three nights.
+
+# Filter by t = 0 scores, and arcsine transform the data
+ischaemia_transf <- ischaemia_analysis %>% filter(time == 0) %>% mutate(score = transf.arcsin(score))
+# Analyse with one-way anova
+summary(aov(score ~ period + Error(id), data = ischaemia_transf))
+```
+
+    ## 
+    ## Error: id
+    ##           Df Sum Sq Mean Sq F value Pr(>F)
+    ## Residuals 10 0.5158 0.05158               
+    ## 
+    ## Error: Within
+    ##           Df  Sum Sq Mean Sq F value Pr(>F)
+    ## period     2 0.01854 0.00927    0.89  0.426
+    ## Residuals 20 0.20827 0.01041
 
 Effect size
 -----------
+
+### Change in pain score within each night
+
+``` r
+# Calculate a bootstrap mean and confidence interval for the
+# change in pain score over time for each night (baseline, and
+# fragmentation nights 1 and 2)
+
+# Extract t = 0 and t = 10 minutes
+delta <- ischaemia %>% mutate(change = `0` - `10`) %>% select(id, 
+    period, change) %>% spread(period, change)
+
+# Boot function
+boot_func <- function(data, d) {
+    mean(data[d])
+}
+# 95% CI Baseline
+baseline_out <- boot(delta$baseline, boot_func, R = 10000)
+baseline_ci <- boot.ci(baseline_out, type = "norm")
+cat(paste0("# Baseline night\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
+    round(baseline_out$t0), "mm", " (", round(baseline_ci$normal[2]), 
+    " to ", round(baseline_ci$normal[3]), ")"))
+```
 
     ## # Baseline night
     ## 
@@ -700,7 +1015,20 @@ Effect size
     ## ten-minute period following removal of a torniquet:
     ## 25mm (13 to 36)
 
-![](./figures/effectSize-1.png)
+``` r
+plot(baseline_out)
+```
+
+![](./figures/effectSize_1-1.png)
+
+``` r
+## fragmentation 1
+frag1_out <- boot(delta$fragmentation1, boot_func, R = 10000)
+frag1_ci <- boot.ci(frag1_out, type = "norm")
+cat(paste0("# One night of sleep fragmentation\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
+    round(frag1_out$t0), "mm", " (", round(frag1_ci$normal[2]), " to ", 
+    round(frag1_ci$normal[3]), ")"))
+```
 
     ## # One night of sleep fragmentation
     ## 
@@ -708,7 +1036,20 @@ Effect size
     ## ten-minute period following removal of a torniquet:
     ## 10mm (-2 to 23)
 
-![](./figures/effectSize-2.png)
+``` r
+plot(frag1_out)
+```
+
+![](./figures/effectSize_1-2.png)
+
+``` r
+## fragmentation 2
+frag2_out <- boot(delta$fragmentation2, boot_func, R = 10000)
+frag2_ci <- boot.ci(frag2_out, type = "norm")
+cat(paste0("# Two nights of sleep fragmentation\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
+    round(frag2_out$t0), "mm", " (", round(frag2_ci$normal[2]), " to ", 
+    round(frag2_ci$normal[3]), ")"))
+```
 
     ## # Two nights of sleep fragmentation
     ## 
@@ -716,10 +1057,42 @@ Effect size
     ## ten-minute period following removal of a torniquet:
     ## 10mm (4 to 17)
 
-![](./figures/effectSize-3.png)
+``` r
+plot(frag2_out)
+```
+
+![](./figures/effectSize_1-3.png)
+ \#\#\# Cohen's D
+
+``` r
+# Calculate Cohen's D after transforming the data (arcsine)
+cohens_d <- ischaemia %>% select(id, period, `0`, `10`) %>% mutate(`0` = transf.arcsin(`0`/100), 
+    `10` = transf.arcsin(`10`/100)) %>% mutate(change = `0` - `10`) %>% 
+    select(id, period, change)
+
+# Baseline vs fragmentation night 1
+BvF1 <- cohens_d %>% filter(period == "baseline" | period == "fragmentation1") %>% 
+    spread(period, change) %>% transmute(baseline, fragmentation = fragmentation1)
+cohensD(BvF1$baseline, BvF1$fragmentation, method = "paired")
+```
+
+    ## [1] 0.3238436
+
+``` r
+# Baseline vs fragmentation night 2
+BvF2 <- cohens_d %>% filter(period == "baseline" | period == "fragmentation2") %>% 
+    spread(period, change) %>% transmute(baseline, fragmentation = fragmentation2)
+cohensD(BvF2$baseline, BvF2$fragmentation, method = "paired")
+```
+
+    ## [1] 0.607281
 
 Session information
 -------------------
+
+``` r
+sessionInfo()
+```
 
     ## R version 3.2.3 (2015-12-10)
     ## Platform: x86_64-apple-darwin13.4.0 (64-bit)
@@ -733,16 +1106,16 @@ Session information
     ##  [8] datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] boot_1.3-17       tidyr_0.3.1       dplyr_0.4.3      
-    ##  [4] readr_0.2.2       pander_0.6.0      knitr_1.11       
-    ##  [7] gamlss_4.3-6      gamlss.dist_4.3-5 MASS_7.3-45      
-    ## [10] gamlss.data_4.3-0 nlme_3.1-122      metafor_1.9-8    
-    ## [13] Matrix_1.2-3      PMCMR_4.0         cowplot_0.6.0    
-    ## [16] scales_0.3.0      ggplot2_2.0.0    
+    ##  [1] boot_1.3-17       tidyr_0.4.0       dplyr_0.4.3      
+    ##  [4] readr_0.2.2       pander_0.6.0      knitr_1.12       
+    ##  [7] lsr_0.5           gamlss_4.3-7      gamlss.dist_4.3-5
+    ## [10] MASS_7.3-45       gamlss.data_4.3-2 nlme_3.1-123     
+    ## [13] metafor_1.9-8     Matrix_1.2-3      PMCMR_4.1        
+    ## [16] cowplot_0.6.0     scales_0.3.0      ggplot2_2.0.0    
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] Rcpp_0.12.2      formatR_1.2.1    plyr_1.8.3       tools_3.2.3     
-    ##  [5] digest_0.6.8     evaluate_0.8     gtable_0.1.2     lattice_0.20-33 
+    ##  [1] Rcpp_0.12.3      formatR_1.2.1    plyr_1.8.3       tools_3.2.3     
+    ##  [5] digest_0.6.9     evaluate_0.8     gtable_0.1.2     lattice_0.20-33 
     ##  [9] DBI_0.3.1        yaml_2.1.13      stringr_1.0.0    R6_2.1.1        
     ## [13] survival_2.38-3  rmarkdown_0.9.2  reshape2_1.4.1   magrittr_1.5    
     ## [17] htmltools_0.3    assertthat_0.1   colorspace_1.2-6 labeling_0.3    
