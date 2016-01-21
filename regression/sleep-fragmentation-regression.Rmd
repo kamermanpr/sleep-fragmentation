@@ -12,7 +12,7 @@ output:
 ***
 
 ## Load required packages and set chunk options
-```{r LoadPackages, message = FALSE}
+```{r LoadPackages, message = FALSE, warning = FALSE}
 # Load packages
 library(ggplot2)
 library(scales)
@@ -22,12 +22,13 @@ library(PMCMR) # pairwise Friedman posthoc tests
 library(metafor) # arcsine transform
 library(nlme) # mixed effect 'lme'
 library(gamlss) # GAM using beta distribution
+library(lsr) # Cohen's D
 library(knitr)
 library(pander)
 library(readr)
 library(dplyr)
 library(tidyr)
-library(boot)
+library(boot) # Bootstrap 95% CI
 
 # Load palette
 cb8.categorical <- c("#0072B2", "#D55E00", "#009E73", "#F0E442", "#56B4E9", "#E69F00", "#CC79A7", "#999999")
@@ -36,7 +37,7 @@ cb8.categorical <- c("#0072B2", "#D55E00", "#009E73", "#F0E442", "#56B4E9", "#E6
 set.seed(123)
 
 # knitr chunk options
-opts_chunk$set(echo = FALSE,
+opts_chunk$set(echo = TRUE,
                warning = FALSE,
                message = FALSE,
                fig.path = './figures/',
@@ -48,22 +49,22 @@ opts_chunk$set(echo = FALSE,
 ```
 
 ## Load data
-```{r import_pain, echo = TRUE}
+```{r import_pain}
 data <- read_csv('./data/regression.csv', col_names = T)
 ```
 
 ## Quick look
-```{r look_Pain}
+```{r look_pain}
 # dim(data)
 # names(data)
 # head(data)
 # tail(data)
 glimpse(data)
-summary(data)
+# summary(data)
 ```
 
 ## Process data
-```{r process_Pain}
+```{r process_pain}
 # Convert id and period to factors
 ischaemia <- data %>%
     mutate(id = factor(id), 
@@ -98,7 +99,7 @@ ischaemia_plot.f <- ischaemia_plot %>%
 
 ## Data analysis
 ### Plot the data
-```{r singlePanel}
+```{r singlePlot}
 # Plot a single panel plot of all data
 ggplot(ischaemia_plot, 
        aes(x = time,
@@ -354,9 +355,28 @@ qqnorm(residuals(mod3.full))
 qqline(residuals(mod3.full), col = 'red', lwd = 2)
 ```
 
+## Differences in pain intensity at t = 0
+```{r deltaT0}
+# Determine whether the is a difference in pain intensity
+# at the end of the ischaemia (t = 0) between the three nights.
+
+# Filter by t = 0 scores, and arcsine transform the data
+ischaemia_transf <- ischaemia_analysis %>%
+    filter(time == 0) %>%
+    mutate(score = transf.arcsin(score))
+# Analyse with one-way anova
+summary(aov(score ~ period + Error(id), 
+            data = ischaemia_transf))
+```
+
 ## Effect size
-```{r effectSize}
-# Calculate a bootstrap median and confidence interval for the difference between baseline and fragmentation nights 1 and 2
+### Change in pain score within each night
+```{r effectSize_1}
+# Calculate a bootstrap mean and confidence interval for the 
+# change in pain score over time for each night 
+# (baseline, and fragmentation nights 1 and 2)
+
+# Extract t = 0 and t = 10 minutes
 delta <- ischaemia %>%
     mutate(change = `0` - `10`) %>%
     select(id, period, change) %>%
@@ -364,33 +384,61 @@ delta <- ischaemia %>%
 
 # Boot function
 boot_func <- function(data, d){
-    mean(data[d])
+    median(data[d])
 } 
 # 95% CI
 ## Baseline
-baseline_out <- boot(delta$baseline, boot_func, R = 10000)
+baseline_out <- boot(delta$baseline, 
+                     boot_func, R = 10000)
 baseline_ci <- boot.ci(baseline_out, type = 'norm')
 cat(paste0("# Baseline night\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
-       round(mean(baseline_out$t0)), "mm",
-       " (", round(baseline_ci$normal[2]), " to ",
-       round(baseline_ci$normal[3]), ")"))
+       round(baseline_out$t0), "mm",
+       " (", round(baseline_ci$normal[2]), 
+       " to ", round(baseline_ci$normal[3]), ")"))
 plot(baseline_out)
 ## fragmentation 1
-frag1_out <- boot(delta$fragmentation1, boot_func, R = 10000)
+frag1_out <- boot(delta$fragmentation1, 
+                  boot_func, R = 10000)
 frag1_ci <- boot.ci(frag1_out, type = 'norm')
 cat(paste0("# One night of sleep fragmentation\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
-       round(mean(frag1_out$t0)), "mm",
+       round(frag1_out$t0), "mm",
        " (", round(frag1_ci$normal[2]), " to ",
        round(frag1_ci$normal[3]), ")"))
 plot(frag1_out)
 ## fragmentation 2
-frag2_out <- boot(delta$fragmentation2, boot_func, R = 10000)
+frag2_out <- boot(delta$fragmentation2, 
+                  boot_func, R = 10000)
 frag2_ci <- boot.ci(frag2_out, type = 'norm')
 cat(paste0("# Two nights of sleep fragmentation\n\nBootstrap mean (95% CI) change in pain intensity (0-100mm VAS) over a\nten-minute period following removal of a torniquet:\n", 
-       round(mean(frag2_out$t0)), "mm",
+       round(frag2_out$t0), "mm",
        " (", round(frag2_ci$normal[2]), " to ",
        round(frag2_ci$normal[3]), ")"))
 plot(frag2_out)
+```
+
+### Cohen's D
+```{r effectSize_2}
+# Calculate Cohen's D after transforming the data (arcsine)
+cohens_d <- ischaemia %>%
+    select(id, period, `0`, `10`) %>%
+    mutate(`0` = transf.arcsin(`0`/100), 
+           `10` = transf.arcsin(`10`/100)) %>%
+    mutate(change = `0` - `10`) %>%
+    select(id, period, change)
+
+# Baseline vs fragmentation night 1
+BvF1 <- cohens_d %>%
+    filter(period == 'baseline' | period == 'fragmentation1') %>%
+    spread(period, change) %>%
+    transmute(baseline, fragmentation = fragmentation1)
+cohensD(BvF1$baseline, BvF1$fragmentation, method = 'paired')
+
+# Baseline vs fragmentation night 2
+BvF2 <- cohens_d %>%
+    filter(period == 'baseline' | period == 'fragmentation2') %>%
+    spread(period, change) %>%
+    transmute(baseline, fragmentation = fragmentation2)
+cohensD(BvF2$baseline, BvF2$fragmentation, method = 'paired')
 ```
 
 ## Session information
