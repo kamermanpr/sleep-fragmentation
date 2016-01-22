@@ -3,7 +3,7 @@ Demographics
 
 ### Authors: Stella Iacovides & Peter Kamerman
 
-**Date: December 10, 2015**
+**Date: January 22, 2016**
 
 ------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ library(dplyr)
 library(tidyr)
 
 # knitr chunk options
-opts_chunk$set(echo = FALSE,
+opts_chunk$set(echo = TRUE,
                warning = FALSE,
                message = FALSE,
                fig.path = './figures/',
@@ -44,6 +44,11 @@ demo <- read_csv("./data/demographics.csv", col_names = T)
 Quick look
 ----------
 
+``` r
+# dim(data) names(demo) head(demo) tail(demo)
+glimpse(demo)
+```
+
     ## Observations: 11
     ## Variables: 12
     ## $ id                 (chr) "A", "B", "C", "D", "E", "F", "G", "H", "I"...
@@ -58,6 +63,10 @@ Quick look
     ## $ menstruation_years (int) 8, 6, 6, 6, 8, 11, 12, 7, 9, 7, 8
     ## $ cycle.length_days  (int) 28, 28, 28, 28, 30, 28, 28, 28, 28, 28, 28
     ## $ menses.length_days (int) 5, 4, 5, 5, 5, 6, 5, 5, 5, 5, 4
+
+``` r
+summary(demo)
+```
 
     ##       id              age_years       weight_kg        height_m    
     ##  Length:11          Min.   :21.00   Min.   :52.00   Min.   :1.500  
@@ -93,6 +102,11 @@ Summary plots
 
 ### Age
 
+``` r
+# table
+pander(summary(demo$age_years), caption = "Five-number summary of age (years)")
+```
+
 <table>
 <caption>Five-number summary of age (years)</caption>
 <colgroup>
@@ -125,9 +139,24 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/Age-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = age_years)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of age\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Age (years)\n") + theme_cowplot() + theme(axis.ticks.x = element_blank(), 
+    axis.text.x = element_blank(), axis.text = element_text(size = 18), 
+    axis.title = element_text(size = 18), plot.title = element_text(size = 18))
+```
 
-### Weight
+![](./figures/age-1.png)
+ \#\#\# Weight
+
+``` r
+# table
+pander(summary(demo$weight_kg), caption = "Five-number summary of weight (kg)")
+```
 
 <table>
 <caption>Five-number summary of weight (kg)</caption>
@@ -161,9 +190,24 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/weight-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = weight_kg)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of weight\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Weight (kg)\n") + theme_cowplot() + theme(axis.ticks.x = element_blank(), 
+    axis.text.x = element_blank(), axis.text = element_text(size = 18), 
+    axis.title = element_text(size = 18), plot.title = element_text(size = 18))
+```
 
-### Height
+![](./figures/weight-1.png)
+ \#\#\# Height
+
+``` r
+# table
+pander(summary(demo$height_m), caption = "Five-number summary of height (m)")
+```
 
 <table>
 <caption>Five-number summary of height (m)</caption>
@@ -197,9 +241,24 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/height-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = height_m)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of height\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Height (m)\n") + theme_cowplot() + theme(axis.ticks.x = element_blank(), 
+    axis.text.x = element_blank(), axis.text = element_text(size = 18), 
+    axis.title = element_text(size = 18), plot.title = element_text(size = 18))
+```
 
-### Body mass index (BMI)
+![](./figures/height-1.png)
+ \#\#\# Body mass index (BMI)
+
+``` r
+# table
+pander(summary(demo$height_m), caption = "Five-number summary of body mass index (BMI; m/kg^2)")
+```
 
 <table>
 <caption>Five-number summary of body mass index (BMI; m/kg^2)</caption>
@@ -233,9 +292,25 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/bmi-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = bmi_kg.m)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of body mass index (BMI)\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Body mass index (kg/m^2)\n") + theme_cowplot() + 
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+```
 
-### Intensity of menstrual pain
+![](./figures/bmi-1.png)
+ \#\#\# Intensity of menstrual pain
+
+``` r
+# table
+pander(summary(demo$menstrual.pain_vas), caption = "Five-number summary of menstrual pain ratings (0-100mm VAS)")
+```
 
 <table>
 <caption>Five-number summary of menstrual pain ratings (0-100mm VAS)</caption>
@@ -269,9 +344,25 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/menstrualPain-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = menstrual.pain_vas)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of menstrual pain\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Pain intensity (0-100mm VAS)\n") + theme_cowplot() + 
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+```
 
-### General Health Questionniare
+![](./figures/menstrualPain-1.png)
+ \#\#\# General Health Questionniare
+
+``` r
+# table
+pander(summary(demo$ghq_score), caption = "Five-number summary of General Health Questionniare (GHQ) scores")
+```
 
 <table>
 <caption>Five-number summary of General Health Questionniare (GHQ) scores</caption>
@@ -305,9 +396,26 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/ghqScore-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = ghq_score)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_hline(yintercept = 6, 
+    colour = "red", size = 1, linetype = 2) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of General Health Questionnaire\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "General Health Questionnaire score\n") + theme_cowplot() + 
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+```
 
-### Pittsburg Sleep Quality Index (PSQI)
+![](./figures/ghqScore-1.png)
+ \#\#\# Pittsburg Sleep Quality Index (PSQI)
+
+``` r
+# table
+pander(summary(demo$psi_score), caption = "Five-number summary of Pittsburg Sleep Quality Index (PSQI) scores")
+```
 
 <table>
 <caption>Five-number summary of Pittsburg Sleep Quality Index (PSQI) scores</caption>
@@ -341,9 +449,26 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/psqiScore-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = psi_score)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_hline(yintercept = 5, 
+    colour = "red", size = 1, linetype = 2) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of Pittsburg Sleep Quality Index\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Pittsburg Sleep Quality Index\n") + theme_cowplot() + 
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+```
 
-### Age at menarche
+![](./figures/psqiScore-1.png)
+ \#\#\# Age at menarche
+
+``` r
+# table
+pander(summary(demo$menarche.age_years), caption = "Five-number summary of age at menarche (years)")
+```
 
 <table>
 <caption>Five-number summary of age at menarche (years)</caption>
@@ -377,9 +502,25 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/menarcheAge-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = menarche.age_years)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of age of menarche\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Age of menarche (years)\n") + theme_cowplot() + 
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+```
 
-### Time since menarche
+![](./figures/menarcheAge-1.png)
+ \#\#\# Time since menarche
+
+``` r
+# table
+pander(summary(demo$menstruation_years), caption = "Five-number summary of time since menarche (years)")
+```
 
 <table>
 <caption>Five-number summary of time since menarche (years)</caption>
@@ -413,9 +554,25 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/timeMenarche-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = menstruation_years)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of time since menarche\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Time since menarche (years)\n") + theme_cowplot() + 
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+```
 
-### Average menstrual cycle length
+![](./figures/timeMenarche-1.png)
+ \#\#\# Average menstrual cycle length
+
+``` r
+# table
+pander(summary(demo$cycle.length_days), caption = "Five-number summary of menstrual cycle length (days)")
+```
 
 <table>
 <caption>Five-number summary of menstrual cycle length (days)</caption>
@@ -449,9 +606,25 @@ Summary plots
 </tbody>
 </table>
 
-![](./figures/cycleLength-1.png)
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = cycle.length_days)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of menstrual cycle length\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Length of menstrual cycle (days)\n") + theme_cowplot() + 
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+```
 
-### Duration of menstrual period
+![](./figures/cycleLength-1.png)
+ \#\#\# Duration of menstrual period
+
+``` r
+# table
+pander(summary(demo$menses.length_days), caption = "Five-number summary of duration of menstrual period (days)")
+```
 
 <table>
 <caption>Five-number summary of duration of menstrual period (days)</caption>
@@ -485,14 +658,28 @@ Summary plots
 </tbody>
 </table>
 
+``` r
+# plot
+ggplot(data = demo, aes(x = factor("Participants"), y = menses.length_days)) + 
+    geom_boxplot(outlier.size = 3, fatten = 3) + geom_jitter(shape = 21, 
+    size = 5, fill = "orange", colour = "#D55E00", position = position_jitter(height = 0)) + 
+    labs(title = "Box-n-Whisker plot of duration of menstrual period\n(scatterplot of individual data: orange circles)", 
+        x = "", y = "Menstrual period (days)\n") + theme_cowplot() + 
+    theme(axis.ticks.x = element_blank(), axis.text.x = element_blank(), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
+```
+
 ![](./figures/periodLength-1.png)
+ \#\# Session information
 
-Session information
--------------------
+``` r
+sessionInfo()
+```
 
-    ## R version 3.2.2 (2015-08-14)
+    ## R version 3.2.3 (2015-12-10)
     ## Platform: x86_64-apple-darwin13.4.0 (64-bit)
-    ## Running under: OS X 10.11.1 (El Capitan)
+    ## Running under: OS X 10.11.3 (El Capitan)
     ## 
     ## locale:
     ## [1] C
@@ -502,13 +689,12 @@ Session information
     ## [8] base     
     ## 
     ## other attached packages:
-    ## [1] tidyr_0.3.1   dplyr_0.4.3   readr_0.2.2   cowplot_0.5.0 scales_0.3.0 
-    ## [6] ggplot2_1.0.1 pander_0.6.0  knitr_1.11   
+    ## [1] tidyr_0.4.0   dplyr_0.4.3   readr_0.2.2   cowplot_0.6.0 scales_0.3.0 
+    ## [6] ggplot2_2.0.0 pander_0.6.0  knitr_1.12   
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] Rcpp_0.12.2      magrittr_1.5     MASS_7.3-45      munsell_0.4.2   
-    ##  [5] colorspace_1.2-6 R6_2.1.1         stringr_1.0.0    plyr_1.8.3      
-    ##  [9] tools_3.2.2      parallel_3.2.2   gtable_0.1.2     DBI_0.3.1       
-    ## [13] htmltools_0.2.6  yaml_2.1.13      digest_0.6.8     assertthat_0.1  
-    ## [17] reshape2_1.4.1   formatR_1.2.1    evaluate_0.8     rmarkdown_0.8.1 
-    ## [21] labeling_0.3     stringi_1.0-1    proto_0.3-10
+    ##  [1] Rcpp_0.12.3      magrittr_1.5     munsell_0.4.2    colorspace_1.2-6
+    ##  [5] R6_2.1.1         stringr_1.0.0    plyr_1.8.3       tools_3.2.3     
+    ##  [9] parallel_3.2.3   gtable_0.1.2     DBI_0.3.1        htmltools_0.3   
+    ## [13] yaml_2.1.13      digest_0.6.9     assertthat_0.1   formatR_1.2.1   
+    ## [17] evaluate_0.8     rmarkdown_0.9.2  labeling_0.3     stringi_1.0-1
