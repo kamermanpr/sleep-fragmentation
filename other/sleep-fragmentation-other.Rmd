@@ -113,9 +113,12 @@ ggplot(sleep.qual,
           plot.title = element_text(size = 18))
 # Friedman test
 friedman.test(sleep.quality ~ period | id, data = sleep.qual)
+head(sleep.qual)
 # Pairwise posthoc 
-posthoc.friedman.conover.test(sleep.quality ~ period | id, 
-                              data = sleep.qual)
+posthoc.friedman.conover.test(y = sleep.qual$sleep.quality, 
+                              groups = sleep.qual$period, 
+                              blocks = sleep.qual$id, 
+                              p.adjust.method = 'holm')
 ```
 
 ### Morning vigilance
@@ -145,8 +148,10 @@ ggplot(morning.vig,
 # Friedman test
 friedman.test(morning.vigilance ~ period | id, data = morning.vig)
 # Pairwise posthoc 
-posthoc.friedman.conover.test(morning.vigilance ~ period | id, 
-                              data = morning.vig)
+posthoc.friedman.conover.test(y = morning.vig$morning.vigilance,
+                              groups = morning.vig$period,
+                              blocks = morning.vig$id, 
+                              p.adjust.method = 'holm')
 ```
 
 ### Pin-prick
@@ -176,7 +181,10 @@ ggplot(pinprick,
 # Friedman test
 friedman.test(pin.prick_mN ~ period | id, data = pinprick)
 # Pairwise posthoc 
-posthoc.friedman.conover.test(pin.prick_mN ~ period | id, data = pinprick)
+posthoc.friedman.conover.test(y = pinprick$pin.prick_mN,
+                              groups = pinprick$period,
+                              blocks = pinprick$id, 
+                              p.adjust.method = 'holm')
 ```
 
 ### Profile of Mood States
@@ -220,11 +228,17 @@ ggplot(poms_plot,
 # Friedman test - Morning
 friedman.test(poms.morning ~ period | id, data = poms)
 # Pairwise posthoc - Morning
-posthoc.friedman.conover.test(poms.morning ~ period | id, data = poms)
+posthoc.friedman.conover.test(y = poms$poms.morning,
+                              groups = poms$period,
+                              blocks = poms$id,
+                              p.adjust.method = 'holm')
 # Friedman test - Evening
 friedman.test(poms.evening ~ period | id, data = poms)
 # Pairwise posthoc - Evening
-posthoc.friedman.conover.test(poms.evening ~ period | id, data = poms)
+posthoc.friedman.conover.test(y = poms$poms.evening,
+                              groups = poms$period,
+                              blocks = poms$id,
+                              p.adjust.method = 'holm')
 ```
 
 ### Pennebaker inventory of Limbic Languidness (PILL)
