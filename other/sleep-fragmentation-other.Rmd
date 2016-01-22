@@ -32,7 +32,7 @@ cb8.categorical <- c("#0072B2", "#D55E00", "#666666")
 set.seed(123)
 
 # knitr chunk options
-opts_chunk$set(echo = FALSE,
+opts_chunk$set(echo = TRUE,
                warning = FALSE,
                message = FALSE,
                fig.path = './figures/',
@@ -44,12 +44,12 @@ opts_chunk$set(echo = FALSE,
 ```
 
 ## Load data
-```{r importData, echo = TRUE}
+```{r importData}
 data <- read_csv('./data/other.csv', col_names = T)
 ```
 
 ### Quick look
-```{r look_Pain}
+```{r lookData}
 # dim(data)
 # names(data)
 # head(data)
