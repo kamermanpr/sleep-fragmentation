@@ -3,7 +3,7 @@ Regression
 
 ### Authors: Stella Iacovides & Peter Kamerman
 
-**Date: January 21, 2016**
+**Date: January 22, 2016**
 
 ------------------------------------------------------------------------
 
@@ -1096,7 +1096,7 @@ sessionInfo()
 
     ## R version 3.2.3 (2015-12-10)
     ## Platform: x86_64-apple-darwin13.4.0 (64-bit)
-    ## Running under: OS X 10.11.2 (El Capitan)
+    ## Running under: OS X 10.11.3 (El Capitan)
     ## 
     ## locale:
     ## [1] C
