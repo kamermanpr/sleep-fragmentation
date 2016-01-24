@@ -25,9 +25,6 @@ library(readr)
 library(dplyr)
 library(tidyr)
 
-# Load palette
-cb8.categorical <- c("#0072B2", "#D55E00", "#666666")
-
 # set seed
 set.seed(123)
 
@@ -75,9 +72,6 @@ pinprick <- data %>%
 ## Profile of Mood State (POMS) before sleep (poms.evening), and after sleep (poms.morning)
 poms <- data %>%
     select(id, period, poms.morning, poms.evening)
-## Pennebaker Inventory of Limbic Languidness (PILL) before sleep (poms.evening), and after sleep (poms.morning)
-pill <- data %>%
-    select(id, period, pill.morning, pill.evening)
 ## Sleep quality after sleep (0-100mm VAS)
 sleep.qual <- data %>%
     select(id, period, sleep.quality)
