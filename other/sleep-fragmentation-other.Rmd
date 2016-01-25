@@ -26,6 +26,10 @@ library(readr)
 library(dplyr)
 library(tidyr)
 
+# Colour-blind palette
+cb8.categorical <- c("#006BA4", "#C85200", "#595959")
+
+
 # set seed
 set.seed(123)
 
@@ -78,6 +82,9 @@ sleep.qual <- data %>%
 ## Morning vigilance after sleep (0-100mm VAS)
 morning.vig <- data %>%
     select(id, period, morning.vigilance)
+## Pennebaker inventory of Limbic Languidness (PILL)
+pill <- data %>%
+    select(id, period, pill.evening, pill.morning)
 ```
 
 ## Data analysis
