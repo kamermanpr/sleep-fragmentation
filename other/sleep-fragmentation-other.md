@@ -3,7 +3,7 @@ Other effects of sleep fragmentation
 
 ### Authors: Stella Iacovides & Peter Kamerman
 
-**Date: January 22, 2016**
+**Date: January 25, 2016**
 
 ------------------------------------------------------------------------
 
@@ -17,13 +17,15 @@ library(scales)
 library(grid)
 library(cowplot)
 library(knitr)
-library(PMCMR) # pairwise post-hoc for Friedman test
+library(PMCMR) # Pairwise post-hoc for Friedman test
+library(coin) # Alternative Friedman test (used for von Frey)
 library(readr)
 library(dplyr)
 library(tidyr)
 
-# Load palette
-cb8.categorical <- c("#0072B2", "#D55E00", "#666666")
+# Colour-blind palette
+cb8.categorical <- c("#006BA4", "#C85200", "#595959")
+
 
 # set seed
 set.seed(123)
@@ -44,7 +46,7 @@ Load data
 ---------
 
 ``` r
-data <- read_csv("./data/other.csv", col_names = T)
+data <- read_csv("./data/other.csv")
 ```
 
 ### Quick look
@@ -98,8 +100,7 @@ summary(data)
 
 ``` r
 # Convert id and period to factors
-data <- data %>% mutate(id = factor(id), period = factor(period)) %>% 
-    tbl_df()
+data <- data %>% mutate(id = factor(id), period = factor(period))
 # Divide data into subsets for analysis Touch sensitivity before
 # and after ischaemia
 vonfrey <- data %>% select(id, period, vF.before_mN, vf.during_mN)
@@ -108,13 +109,12 @@ pinprick <- data %>% select(id, period, pin.prick_mN)
 ## Profile of Mood State (POMS) before sleep (poms.evening), and
 ## after sleep (poms.morning)
 poms <- data %>% select(id, period, poms.morning, poms.evening)
-## Pennebaker Inventory of Limbic Languidness (PILL) before sleep
-## (poms.evening), and after sleep (poms.morning)
-pill <- data %>% select(id, period, pill.morning, pill.evening)
 ## Sleep quality after sleep (0-100mm VAS)
 sleep.qual <- data %>% select(id, period, sleep.quality)
 ## Morning vigilance after sleep (0-100mm VAS)
 morning.vig <- data %>% select(id, period, morning.vigilance)
+## Pennebaker inventory of Limbic Languidness (PILL)
+pill <- data %>% select(id, period, pill.evening, pill.morning)
 ```
 
 Data analysis
@@ -282,8 +282,8 @@ ggplot(poms_plot, aes(x = period, y = score, colour = time, fill = time)) +
     y = "Profile of Mood States (POMS) score\n", title = "Profile of Mood States (POMS)\n") + 
     scale_y_continuous(limits = c(75, 125), expand = c(0, 0)) + scale_x_discrete(labels = c("Baseline\nnight", 
     "Fragmentation\nnight 1", "Fragmentation\nnight 2")) + scale_fill_manual(name = "Time", 
-    labels = c("Morning", "Evening"), values = cb8.categorical) + 
-    scale_colour_manual(name = "Time", labels = c("Morning", "Evening"), 
+    labels = c("Evening", "Morning"), values = cb8.categorical) + 
+    scale_colour_manual(name = "Time", labels = c("Evening", "Morning"), 
         values = cb8.categorical) + theme_cowplot() + theme(legend.position = c(0.9, 
     0.075), legend.text = element_text(size = 18), legend.title = element_text(size = 18), 
     legend.background = element_rect(fill = "gray90"), axis.text = element_text(size = 18), 
@@ -291,35 +291,6 @@ ggplot(poms_plot, aes(x = period, y = score, colour = time, fill = time)) +
 ```
 
 ![](./figures/poms-1.png)
-
-``` r
-# Friedman test - Morning
-friedman.test(poms.morning ~ period | id, data = poms)
-```
-
-    ## 
-    ##  Friedman rank sum test
-    ## 
-    ## data:  poms.morning and period and id
-    ## Friedman chi-squared = 22, df = 2, p-value = 1.67e-05
-
-``` r
-# Pairwise posthoc - Morning
-posthoc.friedman.conover.test(y = poms$poms.morning, groups = poms$period, 
-    blocks = poms$id, p.adjust.method = "holm")
-```
-
-    ## 
-    ##  Pairwise comparisons using Conover's test for a two-way 
-    ##                     balanced complete block design 
-    ## 
-    ## data:  poms$poms.morning , poms$period and poms$id 
-    ## 
-    ##                baseline fragmentation1
-    ## fragmentation1 1.3e-07  -             
-    ## fragmentation2 1.1e-12  1.3e-07       
-    ## 
-    ## P value adjustment method: holm
 
 ``` r
 # Friedman test - Evening
@@ -350,6 +321,35 @@ posthoc.friedman.conover.test(y = poms$poms.evening, groups = poms$period,
     ## 
     ## P value adjustment method: holm
 
+``` r
+# Friedman test - Morning
+friedman.test(poms.morning ~ period | id, data = poms)
+```
+
+    ## 
+    ##  Friedman rank sum test
+    ## 
+    ## data:  poms.morning and period and id
+    ## Friedman chi-squared = 22, df = 2, p-value = 1.67e-05
+
+``` r
+# Pairwise posthoc - Morning
+posthoc.friedman.conover.test(y = poms$poms.morning, groups = poms$period, 
+    blocks = poms$id, p.adjust.method = "holm")
+```
+
+    ## 
+    ##  Pairwise comparisons using Conover's test for a two-way 
+    ##                     balanced complete block design 
+    ## 
+    ## data:  poms$poms.morning , poms$period and poms$id 
+    ## 
+    ##                baseline fragmentation1
+    ## fragmentation1 1.3e-07  -             
+    ## fragmentation2 1.1e-12  1.3e-07       
+    ## 
+    ## P value adjustment method: holm
+
 ### Pennebaker inventory of Limbic Languidness (PILL)
 
 ``` r
@@ -363,8 +363,8 @@ ggplot(pill_plot, aes(x = period, y = score, colour = time, fill = time)) +
     y = "PILL score\n", title = "Pennebaker Inventory of Limbic Languidness (PILL)\n") + 
     scale_y_continuous(limits = c(-0.1, 3), expand = c(0, 0)) + scale_x_discrete(labels = c("Baseline\nnight", 
     "Fragmentation\nnight 1", "Fragmentation\nnight 2")) + scale_fill_manual(name = "Time", 
-    labels = c("Morning", "Evening"), values = cb8.categorical) + 
-    scale_colour_manual(name = "Time", labels = c("Morning", "Evening"), 
+    labels = c("Evening", "Morning"), values = cb8.categorical) + 
+    scale_colour_manual(name = "Time", labels = c("Evening", "Morning"), 
         values = cb8.categorical) + theme_cowplot() + theme(legend.position = c(0.12, 
     0.9), legend.text = element_text(size = 18), legend.title = element_text(size = 18), 
     legend.background = element_rect(fill = "gray90"), axis.text = element_text(size = 18), 
@@ -372,17 +372,6 @@ ggplot(pill_plot, aes(x = period, y = score, colour = time, fill = time)) +
 ```
 
 ![](./figures/pennebaker-1.png)
-
-``` r
-# Friedman test - Morning
-friedman.test(pill.morning ~ period | id, data = pill)
-```
-
-    ## 
-    ##  Friedman rank sum test
-    ## 
-    ## data:  pill.morning and period and id
-    ## Friedman chi-squared = 1.4, df = 2, p-value = 0.4966
 
 ``` r
 # Friedman test - Evening
@@ -394,6 +383,17 @@ friedman.test(pill.evening ~ period | id, data = pill)
     ## 
     ## data:  pill.evening and period and id
     ## Friedman chi-squared = 4, df = 2, p-value = 0.1353
+
+``` r
+# Friedman test - Morning
+friedman.test(pill.morning ~ period | id, data = pill)
+```
+
+    ## 
+    ##  Friedman rank sum test
+    ## 
+    ## data:  pill.morning and period and id
+    ## Friedman chi-squared = 1.4, df = 2, p-value = 0.4966
 
 ### von Frey
 
@@ -407,8 +407,8 @@ ggplot(vf_plot, aes(x = period, y = score, colour = time, fill = time)) +
     y = "von Frey threshold (mN)\n", title = "von Frey threshold\n") + 
     scale_y_continuous(limits = c(0, 65), expand = c(0, 0)) + scale_x_discrete(labels = c("Baseline\nnight", 
     "Fragmentation\nnight 1", "Fragmentation\nnight 2")) + scale_fill_manual(name = "Time", 
-    labels = c("Morning", "Evening"), values = cb8.categorical) + 
-    scale_colour_manual(name = "Time", labels = c("Morning", "Evening"), 
+    labels = c("Evening", "Morning"), values = cb8.categorical) + 
+    scale_colour_manual(name = "Time", labels = c("Evening", "Morning"), 
         values = cb8.categorical) + theme_cowplot() + theme(legend.position = c(0.12, 
     0.9), legend.text = element_text(size = 18), legend.title = element_text(size = 18), 
     legend.background = element_rect(fill = "gray90"), axis.text = element_text(size = 18), 
@@ -418,15 +418,46 @@ ggplot(vf_plot, aes(x = period, y = score, colour = time, fill = time)) +
 ![](./figures/vfrey-1.png)
 
 ``` r
-# Friedman test - Before
-friedman.test(vF.before_mN ~ period | id, data = vonfrey)
+# Friedman test - Before ischaemia
+friedman_test(vF.before_mN ~ period | id, data = vonfrey, distribution = approximate(B = 10000))
+```
+
+    ## 
+    ##  Approximative Friedman Test
+    ## 
+    ## data:  vF.before_mN by
+    ##   period (baseline, fragmentation1, fragmentation2) 
+    ##   stratified by id
+    ## chi-squared = 0, p-value = 1
+
+``` r
+# Friedman test - During ischaemia
+friedman.test(vf.during_mN ~ period | id, data = vonfrey)
 ```
 
     ## 
     ##  Friedman rank sum test
     ## 
-    ## data:  vF.before_mN and period and id
-    ## Friedman chi-squared = NaN, df = 2, p-value = NA
+    ## data:  vf.during_mN and period and id
+    ## Friedman chi-squared = 8, df = 2, p-value = 0.01832
+
+``` r
+# Pairwise posthoc - During ischaemia
+posthoc.friedman.conover.test(y = vonfrey$vf.during_mN, groups = vonfrey$period, 
+    blocks = vonfrey$id, p.adjust.method = "holm")
+```
+
+    ## 
+    ##  Pairwise comparisons using Conover's test for a two-way 
+    ##                     balanced complete block design 
+    ## 
+    ## data:  vonfrey$vf.during_mN , vonfrey$period and vonfrey$id 
+    ## 
+    ##                baseline fragmentation1
+    ## fragmentation1 0.00012  -             
+    ## fragmentation2 0.00012  1.00000       
+    ## 
+    ## P value adjustment method: holm
 
 Session information
 -------------------
@@ -447,13 +478,19 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ## [1] tidyr_0.4.0   dplyr_0.4.3   readr_0.2.2   PMCMR_4.1     knitr_1.12   
-    ## [6] cowplot_0.6.0 scales_0.3.0  ggplot2_2.0.0
+    ##  [1] tidyr_0.4.0     dplyr_0.4.3     readr_0.2.2     coin_1.1-2     
+    ##  [5] survival_2.38-3 PMCMR_4.1       knitr_1.12      cowplot_0.6.0  
+    ##  [9] scales_0.3.0    ggplot2_2.0.0  
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] Rcpp_0.12.3      magrittr_1.5     munsell_0.4.2    colorspace_1.2-6
-    ##  [5] R6_2.1.1         stringr_1.0.0    plyr_1.8.3       tools_3.2.3     
-    ##  [9] parallel_3.2.3   gtable_0.1.2     DBI_0.3.1        htmltools_0.3   
-    ## [13] lazyeval_0.1.10  yaml_2.1.13      digest_0.6.9     assertthat_0.1  
-    ## [17] formatR_1.2.1    evaluate_0.8     rmarkdown_0.9.2  labeling_0.3    
-    ## [21] stringi_1.0-1
+    ##  [1] Rcpp_0.12.3       formatR_1.2.1     plyr_1.8.3       
+    ##  [4] tools_3.2.3       digest_0.6.9      evaluate_0.8     
+    ##  [7] gtable_0.1.2      lattice_0.20-33   DBI_0.3.1        
+    ## [10] yaml_2.1.13       parallel_3.2.3    mvtnorm_1.0-3    
+    ## [13] stringr_1.0.0     stats4_3.2.3      R6_2.1.1         
+    ## [16] rmarkdown_0.9.2   multcomp_1.4-2    TH.data_1.0-6    
+    ## [19] magrittr_1.5      codetools_0.2-14  htmltools_0.3    
+    ## [22] modeltools_0.2-21 splines_3.2.3     assertthat_0.1   
+    ## [25] colorspace_1.2-6  labeling_0.3      sandwich_2.3-4   
+    ## [28] stringi_1.0-1     lazyeval_0.1.10   munsell_0.4.2    
+    ## [31] zoo_1.7-12
