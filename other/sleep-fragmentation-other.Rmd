@@ -20,7 +20,8 @@ library(scales)
 library(grid)
 library(cowplot)
 library(knitr)
-library(PMCMR) # pairwise post-hoc for Friedman test
+library(PMCMR) # Pairwise post-hoc for Friedman test
+library(coin) # Alternative Friedman test (used for von Frey)
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -42,7 +43,7 @@ opts_chunk$set(echo = TRUE,
 
 ## Load data
 ```{r importData}
-data <- read_csv('./data/other.csv', col_names = T)
+data <- read_csv('./data/other.csv')
 ```
 
 ### Quick look
@@ -60,8 +61,7 @@ summary(data)
 # Convert id and period to factors
 data <- data %>%
     mutate(id = factor(id), 
-           period = factor(period)) %>%
-    tbl_df()
+           period = factor(period))
 # Divide data into subsets for analysis
 ## Touch sensitivity before and after ischaemia
 vonfrey <- data %>%
@@ -206,10 +206,10 @@ ggplot(poms_plot,
                                 'Fragmentation\nnight 1',
                                 'Fragmentation\nnight 2')) +
     scale_fill_manual(name = 'Time',
-                      labels = c('Morning', 'Evening'),
+                      labels = c('Evening', 'Morning'),
                       values = cb8.categorical) +
     scale_colour_manual(name = 'Time',
-                      labels = c('Morning', 'Evening'),
+                      labels = c('Evening', 'Morning'),
                       values = cb8.categorical) +
     theme_cowplot() +
     theme(legend.position = c(0.9, 0.075),
@@ -219,17 +219,17 @@ ggplot(poms_plot,
           axis.text = element_text(size = 18),
           axis.title = element_text(size = 18),
           plot.title = element_text(size = 18))
-# Friedman test - Morning
-friedman.test(poms.morning ~ period | id, data = poms)
-# Pairwise posthoc - Morning
-posthoc.friedman.conover.test(y = poms$poms.morning,
-                              groups = poms$period,
-                              blocks = poms$id,
-                              p.adjust.method = 'holm')
 # Friedman test - Evening
 friedman.test(poms.evening ~ period | id, data = poms)
 # Pairwise posthoc - Evening
 posthoc.friedman.conover.test(y = poms$poms.evening,
+                              groups = poms$period,
+                              blocks = poms$id,
+                              p.adjust.method = 'holm')
+# Friedman test - Morning
+friedman.test(poms.morning ~ period | id, data = poms)
+# Pairwise posthoc - Morning
+posthoc.friedman.conover.test(y = poms$poms.morning,
                               groups = poms$period,
                               blocks = poms$id,
                               p.adjust.method = 'holm')
@@ -264,10 +264,10 @@ ggplot(pill_plot,
                                 'Fragmentation\nnight 1',
                                 'Fragmentation\nnight 2')) +
     scale_fill_manual(name = 'Time',
-                      labels = c('Morning', 'Evening'),
+                      labels = c('Evening', 'Morning'),
                       values = cb8.categorical) +
     scale_colour_manual(name = 'Time',
-                      labels = c('Morning', 'Evening'),
+                      labels = c('Evening', 'Morning'),
                       values = cb8.categorical) +
     theme_cowplot() +
     theme(legend.position = c(0.12, 0.90),
@@ -277,10 +277,10 @@ ggplot(pill_plot,
           axis.text = element_text(size = 18),
           axis.title = element_text(size = 18),
           plot.title = element_text(size = 18))
-# Friedman test - Morning
-friedman.test(pill.morning ~ period | id, data = pill)
 # Friedman test - Evening
 friedman.test(pill.evening ~ period | id, data = pill)
+# Friedman test - Morning
+friedman.test(pill.morning ~ period | id, data = pill)
 ```
 
 ### von Frey
@@ -308,10 +308,10 @@ ggplot(vf_plot,
                                 'Fragmentation\nnight 1',
                                 'Fragmentation\nnight 2')) +
     scale_fill_manual(name = 'Time',
-                      labels = c('Morning', 'Evening'),
+                      labels = c('Evening', 'Morning'),
                       values = cb8.categorical) +
     scale_colour_manual(name = 'Time',
-                        labels = c('Morning', 'Evening'),
+                        labels = c('Evening', 'Morning'),
                         values = cb8.categorical) +
     theme_cowplot() +
     theme(legend.position = c(0.12, 0.90),
@@ -321,8 +321,17 @@ ggplot(vf_plot,
           axis.text = element_text(size = 18),
           axis.title = element_text(size = 18),
           plot.title = element_text(size = 18))
-# Friedman test - Before
-friedman.test(vF.before_mN ~ period | id, data = vonfrey)
+# Friedman test - Before ischaemia
+friedman_test(vF.before_mN ~ period | id, data = vonfrey, 
+             distribution = approximate(B = 10000))
+# Friedman test - During ischaemia
+friedman.test(vf.during_mN ~ period | id,
+              data = vonfrey)
+# Pairwise posthoc - During ischaemia
+posthoc.friedman.conover.test(y = vonfrey$vf.during_mN,
+                              groups = vonfrey$period,
+                              blocks = vonfrey$id,
+                              p.adjust.method = 'holm')
 ```
 
 ## Session information
