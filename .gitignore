@@ -21,7 +21,6 @@
 *.ppt
 
 # Other
-/manuscript
 *.log
 *.bak
 *.html
