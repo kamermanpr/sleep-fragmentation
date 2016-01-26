@@ -27,7 +27,7 @@ library(dplyr)
 library(tidyr)
 
 # Colour-blind palette
-cb8.categorical <- c("#006BA4", "#C85200", "#595959")
+cb.palette <- c("#006BA4", "#C85200", "#595959")
 
 
 # set seed
@@ -82,9 +82,6 @@ sleep.qual <- data %>%
 ## Morning vigilance after sleep (0-100mm VAS)
 morning.vig <- data %>%
     select(id, period, morning.vigilance)
-## Pennebaker inventory of Limbic Languidness (PILL)
-pill <- data %>%
-    select(id, period, pill.evening, pill.morning)
 ```
 
 ## Data analysis
@@ -214,10 +211,10 @@ ggplot(poms_plot,
                                 'Fragmentation\nnight 2')) +
     scale_fill_manual(name = 'Time',
                       labels = c('Evening', 'Morning'),
-                      values = cb8.categorical) +
+                      values = cb.palette) +
     scale_colour_manual(name = 'Time',
                       labels = c('Evening', 'Morning'),
-                      values = cb8.categorical) +
+                      values = cb.palette) +
     theme_cowplot() +
     theme(legend.position = c(0.9, 0.075),
           legend.text = element_text(size = 18),
@@ -242,56 +239,11 @@ posthoc.friedman.conover.test(y = poms$poms.morning,
                               p.adjust.method = 'holm')
 ```
 
-### Pennebaker inventory of Limbic Languidness (PILL)
-```{r pennebaker}
-# Plot
-pill_plot <- pill %>%
-    group_by(id, period) %>%
-    select(id, 
-           period, 
-           pill.evening, 
-           pill.morning) %>%
-    gather(key = time, 
-           value = score, 
-           pill.morning, 
-           pill.evening)
-
-ggplot(pill_plot, 
-       aes(x = period,
-           y = score,
-           colour = time,
-           fill = time)) +
-    geom_boxplot(fatten = 4, alpha = 0.5) +
-    labs(x = '\nIntervention',
-         y = 'PILL score\n',
-         title = 'Pennebaker Inventory of Limbic Languidness (PILL)\n') +
-    scale_y_continuous(limits = c(-0.1, 3), 
-                       expand = c(0,0)) +
-    scale_x_discrete(labels = c('Baseline\nnight', 
-                                'Fragmentation\nnight 1',
-                                'Fragmentation\nnight 2')) +
-    scale_fill_manual(name = 'Time',
-                      labels = c('Evening', 'Morning'),
-                      values = cb8.categorical) +
-    scale_colour_manual(name = 'Time',
-                      labels = c('Evening', 'Morning'),
-                      values = cb8.categorical) +
-    theme_cowplot() +
-    theme(legend.position = c(0.12, 0.90),
-          legend.text = element_text(size = 18),
-          legend.title = element_text(size = 18),
-          legend.background = element_rect(fill = 'gray90'),
-          axis.text = element_text(size = 18),
-          axis.title = element_text(size = 18),
-          plot.title = element_text(size = 18))
-# Friedman test - Evening
-friedman.test(pill.evening ~ period | id, data = pill)
-# Friedman test - Morning
-friedman.test(pill.morning ~ period | id, data = pill)
-```
-
 ### von Frey
 ```{r vfrey}
+# von Frey was performed to assess whether fragmentation affected touch sensitivity,
+# and to confirm whether the tourniquet indiced hypoaesthesia.
+
 # Plot
 vf_plot <- vonfrey %>%
     group_by(id, period) %>%
@@ -316,10 +268,10 @@ ggplot(vf_plot,
                                 'Fragmentation\nnight 2')) +
     scale_fill_manual(name = 'Time',
                       labels = c('Evening', 'Morning'),
-                      values = cb8.categorical) +
+                      values = cb.palette) +
     scale_colour_manual(name = 'Time',
                         labels = c('Evening', 'Morning'),
-                        values = cb8.categorical) +
+                        values = cb.palette) +
     theme_cowplot() +
     theme(legend.position = c(0.12, 0.90),
           legend.text = element_text(size = 18),
@@ -331,14 +283,34 @@ ggplot(vf_plot,
 # Friedman test - Before ischaemia
 friedman_test(vF.before_mN ~ period | id, data = vonfrey, 
              distribution = approximate(B = 10000))
-# Friedman test - During ischaemia
-friedman.test(vf.during_mN ~ period | id,
-              data = vonfrey)
-# Pairwise posthoc - During ischaemia
-posthoc.friedman.conover.test(y = vonfrey$vf.during_mN,
-                              groups = vonfrey$period,
-                              blocks = vonfrey$id,
-                              p.adjust.method = 'holm')
+# Friedman test - Before vs during ischaemia
+## Baseline
+vf_base <- vf_plot %>%
+    ungroup() %>%
+    filter(period == 'baseline') %>%
+    mutate(period = factor(period),
+           time = factor(time)) 
+vf_base_F <- friedman.test(score ~ time | id, data = vf_base); vf_base_F
+## Fragmentation night 1
+vf_frag1 <- vf_plot %>%
+    ungroup() %>%
+    filter(period == 'fragmentation1') %>%
+    mutate(period = factor(period),
+           time = factor(time)) 
+vf_frag1_F <- friedman.test(score ~ time | id, data = vf_frag1); vf_frag1_F
+## Fragmentation night 2
+vf_frag2 <- vf_plot %>%
+    ungroup() %>%
+    filter(period == 'fragmentation2') %>%
+    mutate(period = factor(period),
+           time = factor(time)) 
+vf_frag2_F <- friedman.test(score ~ time | id, data = vf_frag2); vf_frag2_F
+## Holm correction
+vf_holm <- c(vf_base_F$p.value, vf_frag1_F$p.value, vf_frag2_F$p.value)
+matrix(round(p.adjust(vf_holm, method = 'holm'), 5), 
+       ncol = 3, nrow = 1, 
+       dimnames = list(c('p-value'),
+                       c('baseline', 'fragmentation 1', 'fragmentation 2')))
 ```
 
 ## Session information
