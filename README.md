@@ -9,13 +9,15 @@
 ## Repository contents
 This repository contains the analytical data, analysis scripts, and the markdown document and figure outputs produced by those scripts.  
 
-There are three sections:
+There are three analysis sections:
 
 1. [Demographics](./demographics/), which provides summaries of basic demographic information for the participants, and information on participant menstrual cycles, sleep quality, and general health.   
 2. [Regression](./regression/), which describes the regression modelling of the effect of sleep fragmentation on the intensity of ischaemic pain over a ten-minute period on the morning after each nights sleep.  
 3. [Other](./other/), which describes the analysis of the effect sleep fragmentation had on mood, sleep quality, morning vigilance, and somatosensory thersholds to noxious (pin-prick) and innocuous (von Frey hairs) punctate mechanical stimuli.
 
 Each of the sections has its own README which describes the content in more detail.
+
+In addition, the scripts (and the output from those scripts) that were used to process the data for publication (i.e., publication-ready figures and tables) can be found in: [Manuscript](./Manuscript/).
 
 ## Overview of the study
 ### Background
