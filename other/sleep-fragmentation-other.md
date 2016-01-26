@@ -3,7 +3,7 @@ Other effects of sleep fragmentation
 
 ### Authors: Stella Iacovides & Peter Kamerman
 
-**Date: January 25, 2016**
+**Date: January 26, 2016**
 
 ------------------------------------------------------------------------
 
@@ -24,7 +24,7 @@ library(dplyr)
 library(tidyr)
 
 # Colour-blind palette
-cb8.categorical <- c("#006BA4", "#C85200", "#595959")
+cb.palette <- c("#006BA4", "#C85200", "#595959")
 
 
 # set seed
@@ -57,7 +57,7 @@ glimpse(data)
 ```
 
     ## Observations: 33
-    ## Variables: 11
+    ## Variables: 9
     ## $ id                (chr) "A", "B", "C", "D", "E", "F", "G", "H", "I",...
     ## $ period            (chr) "baseline", "baseline", "baseline", "baselin...
     ## $ vF.before_mN      (int) 16, 16, 8, 8, 8, 8, 16, 16, 8, 8, 16, 16, 16...
@@ -65,8 +65,6 @@ glimpse(data)
     ## $ pin.prick_mN      (int) 256, 128, 128, 256, 128, 128, 512, 256, 128,...
     ## $ poms.evening      (int) 91, 85, 79, 97, 92, 89, 81, 94, 83, 81, 89, ...
     ## $ poms.morning      (int) 85, 83, 82, 95, 97, 87, 83, 98, 89, 89, 92, ...
-    ## $ pill.evening      (int) 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,...
-    ## $ pill.morning      (int) 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,...
     ## $ sleep.quality     (int) 95, 84, 78, 46, 84, 79, 78, 83, 84, 83, 86, ...
     ## $ morning.vigilance (int) 95, 71, 73, 60, 79, 76, 69, 77, 84, 80, 82, ...
 
@@ -81,20 +79,20 @@ summary(data)
     ##                                        Mean   :11.64   Mean   :48.48  
     ##                                        3rd Qu.:16.00   3rd Qu.:64.00  
     ##                                        Max.   :16.00   Max.   :64.00  
-    ##   pin.prick_mN    poms.evening     poms.morning    pill.evening   
-    ##  Min.   : 64.0   Min.   : 79.00   Min.   : 82.0   Min.   :0.0000  
-    ##  1st Qu.: 64.0   1st Qu.: 87.00   1st Qu.: 92.0   1st Qu.:0.0000  
-    ##  Median :128.0   Median : 93.00   Median : 98.0   Median :0.0000  
-    ##  Mean   :145.5   Mean   : 92.18   Mean   :100.4   Mean   :0.4242  
-    ##  3rd Qu.:128.0   3rd Qu.: 97.00   3rd Qu.:111.0   3rd Qu.:0.0000  
-    ##  Max.   :512.0   Max.   :107.00   Max.   :121.0   Max.   :3.0000  
-    ##   pill.morning    sleep.quality   morning.vigilance
-    ##  Min.   :0.0000   Min.   :14.00   Min.   : 9.00    
-    ##  1st Qu.:0.0000   1st Qu.:42.00   1st Qu.:36.00    
-    ##  Median :0.0000   Median :52.00   Median :52.00    
-    ##  Mean   :0.1818   Mean   :56.15   Mean   :51.91    
-    ##  3rd Qu.:0.0000   3rd Qu.:78.00   3rd Qu.:71.00    
-    ##  Max.   :3.0000   Max.   :95.00   Max.   :95.00
+    ##   pin.prick_mN    poms.evening     poms.morning   sleep.quality  
+    ##  Min.   : 64.0   Min.   : 79.00   Min.   : 82.0   Min.   :14.00  
+    ##  1st Qu.: 64.0   1st Qu.: 87.00   1st Qu.: 92.0   1st Qu.:42.00  
+    ##  Median :128.0   Median : 93.00   Median : 98.0   Median :52.00  
+    ##  Mean   :145.5   Mean   : 92.18   Mean   :100.4   Mean   :56.15  
+    ##  3rd Qu.:128.0   3rd Qu.: 97.00   3rd Qu.:111.0   3rd Qu.:78.00  
+    ##  Max.   :512.0   Max.   :107.00   Max.   :121.0   Max.   :95.00  
+    ##  morning.vigilance
+    ##  Min.   : 9.00    
+    ##  1st Qu.:36.00    
+    ##  Median :52.00    
+    ##  Mean   :51.91    
+    ##  3rd Qu.:71.00    
+    ##  Max.   :95.00
 
 ### Process data
 
@@ -113,8 +111,6 @@ poms <- data %>% select(id, period, poms.morning, poms.evening)
 sleep.qual <- data %>% select(id, period, sleep.quality)
 ## Morning vigilance after sleep (0-100mm VAS)
 morning.vig <- data %>% select(id, period, morning.vigilance)
-## Pennebaker inventory of Limbic Languidness (PILL)
-pill <- data %>% select(id, period, pill.evening, pill.morning)
 ```
 
 Data analysis
@@ -282,12 +278,12 @@ ggplot(poms_plot, aes(x = period, y = score, colour = time, fill = time)) +
     y = "Profile of Mood States (POMS) score\n", title = "Profile of Mood States (POMS)\n") + 
     scale_y_continuous(limits = c(75, 125), expand = c(0, 0)) + scale_x_discrete(labels = c("Baseline\nnight", 
     "Fragmentation\nnight 1", "Fragmentation\nnight 2")) + scale_fill_manual(name = "Time", 
-    labels = c("Evening", "Morning"), values = cb8.categorical) + 
-    scale_colour_manual(name = "Time", labels = c("Evening", "Morning"), 
-        values = cb8.categorical) + theme_cowplot() + theme(legend.position = c(0.9, 
-    0.075), legend.text = element_text(size = 18), legend.title = element_text(size = 18), 
-    legend.background = element_rect(fill = "gray90"), axis.text = element_text(size = 18), 
-    axis.title = element_text(size = 18), plot.title = element_text(size = 18))
+    labels = c("Evening", "Morning"), values = cb.palette) + scale_colour_manual(name = "Time", 
+    labels = c("Evening", "Morning"), values = cb.palette) + theme_cowplot() + 
+    theme(legend.position = c(0.9, 0.075), legend.text = element_text(size = 18), 
+        legend.title = element_text(size = 18), legend.background = element_rect(fill = "gray90"), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
 ```
 
 ![](./figures/poms-1.png)
@@ -350,54 +346,13 @@ posthoc.friedman.conover.test(y = poms$poms.morning, groups = poms$period,
     ## 
     ## P value adjustment method: holm
 
-### Pennebaker inventory of Limbic Languidness (PILL)
-
-``` r
-# Plot
-pill_plot <- pill %>% group_by(id, period) %>% select(id, period, 
-    pill.evening, pill.morning) %>% gather(key = time, value = score, 
-    pill.morning, pill.evening)
-
-ggplot(pill_plot, aes(x = period, y = score, colour = time, fill = time)) + 
-    geom_boxplot(fatten = 4, alpha = 0.5) + labs(x = "\nIntervention", 
-    y = "PILL score\n", title = "Pennebaker Inventory of Limbic Languidness (PILL)\n") + 
-    scale_y_continuous(limits = c(-0.1, 3), expand = c(0, 0)) + scale_x_discrete(labels = c("Baseline\nnight", 
-    "Fragmentation\nnight 1", "Fragmentation\nnight 2")) + scale_fill_manual(name = "Time", 
-    labels = c("Evening", "Morning"), values = cb8.categorical) + 
-    scale_colour_manual(name = "Time", labels = c("Evening", "Morning"), 
-        values = cb8.categorical) + theme_cowplot() + theme(legend.position = c(0.12, 
-    0.9), legend.text = element_text(size = 18), legend.title = element_text(size = 18), 
-    legend.background = element_rect(fill = "gray90"), axis.text = element_text(size = 18), 
-    axis.title = element_text(size = 18), plot.title = element_text(size = 18))
-```
-
-![](./figures/pennebaker-1.png)
-
-``` r
-# Friedman test - Evening
-friedman.test(pill.evening ~ period | id, data = pill)
-```
-
-    ## 
-    ##  Friedman rank sum test
-    ## 
-    ## data:  pill.evening and period and id
-    ## Friedman chi-squared = 4, df = 2, p-value = 0.1353
-
-``` r
-# Friedman test - Morning
-friedman.test(pill.morning ~ period | id, data = pill)
-```
-
-    ## 
-    ##  Friedman rank sum test
-    ## 
-    ## data:  pill.morning and period and id
-    ## Friedman chi-squared = 1.4, df = 2, p-value = 0.4966
-
 ### von Frey
 
 ``` r
+# von Frey was performed to assess whether fragmentation affected
+# touch sensitivity, and to confirm whether the tourniquet indiced
+# hypoaesthesia.
+
 # Plot
 vf_plot <- vonfrey %>% group_by(id, period) %>% gather(key = time, 
     value = score, vF.before_mN, vf.during_mN)
@@ -407,12 +362,12 @@ ggplot(vf_plot, aes(x = period, y = score, colour = time, fill = time)) +
     y = "von Frey threshold (mN)\n", title = "von Frey threshold\n") + 
     scale_y_continuous(limits = c(0, 65), expand = c(0, 0)) + scale_x_discrete(labels = c("Baseline\nnight", 
     "Fragmentation\nnight 1", "Fragmentation\nnight 2")) + scale_fill_manual(name = "Time", 
-    labels = c("Evening", "Morning"), values = cb8.categorical) + 
-    scale_colour_manual(name = "Time", labels = c("Evening", "Morning"), 
-        values = cb8.categorical) + theme_cowplot() + theme(legend.position = c(0.12, 
-    0.9), legend.text = element_text(size = 18), legend.title = element_text(size = 18), 
-    legend.background = element_rect(fill = "gray90"), axis.text = element_text(size = 18), 
-    axis.title = element_text(size = 18), plot.title = element_text(size = 18))
+    labels = c("Evening", "Morning"), values = cb.palette) + scale_colour_manual(name = "Time", 
+    labels = c("Evening", "Morning"), values = cb.palette) + theme_cowplot() + 
+    theme(legend.position = c(0.12, 0.9), legend.text = element_text(size = 18), 
+        legend.title = element_text(size = 18), legend.background = element_rect(fill = "gray90"), 
+        axis.text = element_text(size = 18), axis.title = element_text(size = 18), 
+        plot.title = element_text(size = 18))
 ```
 
 ![](./figures/vfrey-1.png)
@@ -431,33 +386,57 @@ friedman_test(vF.before_mN ~ period | id, data = vonfrey, distribution = approxi
     ## chi-squared = 0, p-value = 1
 
 ``` r
-# Friedman test - During ischaemia
-friedman.test(vf.during_mN ~ period | id, data = vonfrey)
+# Friedman test - Before vs during ischaemia Baseline
+vf_base <- vf_plot %>% ungroup() %>% filter(period == "baseline") %>% 
+    mutate(period = factor(period), time = factor(time))
+vf_base_F <- friedman.test(score ~ time | id, data = vf_base)
+vf_base_F
 ```
 
     ## 
     ##  Friedman rank sum test
     ## 
-    ## data:  vf.during_mN and period and id
-    ## Friedman chi-squared = 8, df = 2, p-value = 0.01832
+    ## data:  score and time and id
+    ## Friedman chi-squared = 11, df = 1, p-value = 0.0009111
 
 ``` r
-# Pairwise posthoc - During ischaemia
-posthoc.friedman.conover.test(y = vonfrey$vf.during_mN, groups = vonfrey$period, 
-    blocks = vonfrey$id, p.adjust.method = "holm")
+## Fragmentation night 1
+vf_frag1 <- vf_plot %>% ungroup() %>% filter(period == "fragmentation1") %>% 
+    mutate(period = factor(period), time = factor(time))
+vf_frag1_F <- friedman.test(score ~ time | id, data = vf_frag1)
+vf_frag1_F
 ```
 
     ## 
-    ##  Pairwise comparisons using Conover's test for a two-way 
-    ##                     balanced complete block design 
+    ##  Friedman rank sum test
     ## 
-    ## data:  vonfrey$vf.during_mN , vonfrey$period and vonfrey$id 
+    ## data:  score and time and id
+    ## Friedman chi-squared = 11, df = 1, p-value = 0.0009111
+
+``` r
+## Fragmentation night 2
+vf_frag2 <- vf_plot %>% ungroup() %>% filter(period == "fragmentation2") %>% 
+    mutate(period = factor(period), time = factor(time))
+vf_frag2_F <- friedman.test(score ~ time | id, data = vf_frag2)
+vf_frag2_F
+```
+
     ## 
-    ##                baseline fragmentation1
-    ## fragmentation1 0.00012  -             
-    ## fragmentation2 0.00012  1.00000       
+    ##  Friedman rank sum test
     ## 
-    ## P value adjustment method: holm
+    ## data:  score and time and id
+    ## Friedman chi-squared = 11, df = 1, p-value = 0.0009111
+
+``` r
+## Holm correction
+vf_holm <- c(vf_base_F$p.value, vf_frag1_F$p.value, vf_frag2_F$p.value)
+matrix(round(p.adjust(vf_holm, method = "holm"), 5), ncol = 3, nrow = 1, 
+    dimnames = list(c("p-value"), c("baseline", "fragmentation 1", 
+        "fragmentation 2")))
+```
+
+    ##         baseline fragmentation 1 fragmentation 2
+    ## p-value  0.00273         0.00273         0.00273
 
 Session information
 -------------------
