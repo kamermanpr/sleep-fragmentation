@@ -283,30 +283,33 @@ ggplot(vf_plot,
 # Friedman test - Before ischaemia
 friedman_test(vF.before_mN ~ period | id, data = vonfrey, 
              distribution = approximate(B = 10000))
-# Friedman test - Before vs during ischaemia
+# Wilcoxon signed rank test - Before vs during ischaemia
 ## Baseline
 vf_base <- vf_plot %>%
     ungroup() %>%
     filter(period == 'baseline') %>%
     mutate(period = factor(period),
            time = factor(time)) 
-vf_base_F <- friedman.test(score ~ time | id, data = vf_base); vf_base_F
+vf_base_w <- wilcox_test(score ~ time | id, data = vf_base)
+vf_base_w
 ## Fragmentation night 1
 vf_frag1 <- vf_plot %>%
     ungroup() %>%
     filter(period == 'fragmentation1') %>%
     mutate(period = factor(period),
            time = factor(time)) 
-vf_frag1_F <- friedman.test(score ~ time | id, data = vf_frag1); vf_frag1_F
+vf_frag1_w <- wilcox_test(score ~ time | id, data = vf_base)
+vf_frag1_w
 ## Fragmentation night 2
 vf_frag2 <- vf_plot %>%
     ungroup() %>%
     filter(period == 'fragmentation2') %>%
     mutate(period = factor(period),
            time = factor(time)) 
-vf_frag2_F <- friedman.test(score ~ time | id, data = vf_frag2); vf_frag2_F
+vf_frag2_w <- wilcox_test(score ~ time | id, data = vf_base)
+vf_frag2_w
 ## Holm correction
-vf_holm <- c(vf_base_F$p.value, vf_frag1_F$p.value, vf_frag2_F$p.value)
+vf_holm <- c(pvalue(vf_base_w), pvalue(vf_frag1_w), pvalue(vf_frag2_w))
 matrix(round(p.adjust(vf_holm, method = 'holm'), 5), 
        ncol = 3, nrow = 1, 
        dimnames = list(c('p-value'),
