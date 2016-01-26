@@ -57,7 +57,7 @@ glimpse(data)
 ```
 
     ## Observations: 33
-    ## Variables: 9
+    ## Variables: 11
     ## $ id                (chr) "A", "B", "C", "D", "E", "F", "G", "H", "I",...
     ## $ period            (chr) "baseline", "baseline", "baseline", "baselin...
     ## $ vF.before_mN      (int) 16, 16, 8, 8, 8, 8, 16, 16, 8, 8, 16, 16, 16...
@@ -65,6 +65,8 @@ glimpse(data)
     ## $ pin.prick_mN      (int) 256, 128, 128, 256, 128, 128, 512, 256, 128,...
     ## $ poms.evening      (int) 91, 85, 79, 97, 92, 89, 81, 94, 83, 81, 89, ...
     ## $ poms.morning      (int) 85, 83, 82, 95, 97, 87, 83, 98, 89, 89, 92, ...
+    ## $ pill.evening      (int) 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,...
+    ## $ pill.morning      (int) 0, 0, 0, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,...
     ## $ sleep.quality     (int) 95, 84, 78, 46, 84, 79, 78, 83, 84, 83, 86, ...
     ## $ morning.vigilance (int) 95, 71, 73, 60, 79, 76, 69, 77, 84, 80, 82, ...
 
@@ -79,20 +81,20 @@ summary(data)
     ##                                        Mean   :11.64   Mean   :48.48  
     ##                                        3rd Qu.:16.00   3rd Qu.:64.00  
     ##                                        Max.   :16.00   Max.   :64.00  
-    ##   pin.prick_mN    poms.evening     poms.morning   sleep.quality  
-    ##  Min.   : 64.0   Min.   : 79.00   Min.   : 82.0   Min.   :14.00  
-    ##  1st Qu.: 64.0   1st Qu.: 87.00   1st Qu.: 92.0   1st Qu.:42.00  
-    ##  Median :128.0   Median : 93.00   Median : 98.0   Median :52.00  
-    ##  Mean   :145.5   Mean   : 92.18   Mean   :100.4   Mean   :56.15  
-    ##  3rd Qu.:128.0   3rd Qu.: 97.00   3rd Qu.:111.0   3rd Qu.:78.00  
-    ##  Max.   :512.0   Max.   :107.00   Max.   :121.0   Max.   :95.00  
-    ##  morning.vigilance
-    ##  Min.   : 9.00    
-    ##  1st Qu.:36.00    
-    ##  Median :52.00    
-    ##  Mean   :51.91    
-    ##  3rd Qu.:71.00    
-    ##  Max.   :95.00
+    ##   pin.prick_mN    poms.evening     poms.morning    pill.evening   
+    ##  Min.   : 64.0   Min.   : 79.00   Min.   : 82.0   Min.   :0.0000  
+    ##  1st Qu.: 64.0   1st Qu.: 87.00   1st Qu.: 92.0   1st Qu.:0.0000  
+    ##  Median :128.0   Median : 93.00   Median : 98.0   Median :0.0000  
+    ##  Mean   :145.5   Mean   : 92.18   Mean   :100.4   Mean   :0.4242  
+    ##  3rd Qu.:128.0   3rd Qu.: 97.00   3rd Qu.:111.0   3rd Qu.:0.0000  
+    ##  Max.   :512.0   Max.   :107.00   Max.   :121.0   Max.   :3.0000  
+    ##   pill.morning    sleep.quality   morning.vigilance
+    ##  Min.   :0.0000   Min.   :14.00   Min.   : 9.00    
+    ##  1st Qu.:0.0000   1st Qu.:42.00   1st Qu.:36.00    
+    ##  Median :0.0000   Median :52.00   Median :52.00    
+    ##  Mean   :0.1818   Mean   :56.15   Mean   :51.91    
+    ##  3rd Qu.:0.0000   3rd Qu.:78.00   3rd Qu.:71.00    
+    ##  Max.   :3.0000   Max.   :95.00   Max.   :95.00
 
 ### Process data
 
@@ -386,57 +388,66 @@ friedman_test(vF.before_mN ~ period | id, data = vonfrey, distribution = approxi
     ## chi-squared = 0, p-value = 1
 
 ``` r
-# Friedman test - Before vs during ischaemia Baseline
+# Wilcoxon signed rank test - Before vs during ischaemia Baseline
 vf_base <- vf_plot %>% ungroup() %>% filter(period == "baseline") %>% 
     mutate(period = factor(period), time = factor(time))
-vf_base_F <- friedman.test(score ~ time | id, data = vf_base)
-vf_base_F
+vf_base_w <- wilcox_test(score ~ time | id, data = vf_base)
+vf_base_w
 ```
 
     ## 
-    ##  Friedman rank sum test
+    ##  Asymptotic Wilcoxon-Mann-Whitney Test
     ## 
-    ## data:  score and time and id
-    ## Friedman chi-squared = 11, df = 1, p-value = 0.0009111
+    ## data:  score by
+    ##   time (vF.before_mN, vf.during_mN) 
+    ##   stratified by id
+    ## Z = -3.1875, p-value = 0.001435
+    ## alternative hypothesis: true mu is not equal to 0
 
 ``` r
 ## Fragmentation night 1
 vf_frag1 <- vf_plot %>% ungroup() %>% filter(period == "fragmentation1") %>% 
     mutate(period = factor(period), time = factor(time))
-vf_frag1_F <- friedman.test(score ~ time | id, data = vf_frag1)
-vf_frag1_F
+vf_frag1_w <- wilcox_test(score ~ time | id, data = vf_base)
+vf_frag1_w
 ```
 
     ## 
-    ##  Friedman rank sum test
+    ##  Asymptotic Wilcoxon-Mann-Whitney Test
     ## 
-    ## data:  score and time and id
-    ## Friedman chi-squared = 11, df = 1, p-value = 0.0009111
+    ## data:  score by
+    ##   time (vF.before_mN, vf.during_mN) 
+    ##   stratified by id
+    ## Z = -3.1875, p-value = 0.001435
+    ## alternative hypothesis: true mu is not equal to 0
 
 ``` r
 ## Fragmentation night 2
 vf_frag2 <- vf_plot %>% ungroup() %>% filter(period == "fragmentation2") %>% 
     mutate(period = factor(period), time = factor(time))
-vf_frag2_F <- friedman.test(score ~ time | id, data = vf_frag2)
-vf_frag2_F
+vf_frag2_w <- wilcox_test(score ~ time | id, data = vf_base)
+vf_frag2_w
 ```
 
     ## 
-    ##  Friedman rank sum test
+    ##  Asymptotic Wilcoxon-Mann-Whitney Test
     ## 
-    ## data:  score and time and id
-    ## Friedman chi-squared = 11, df = 1, p-value = 0.0009111
+    ## data:  score by
+    ##   time (vF.before_mN, vf.during_mN) 
+    ##   stratified by id
+    ## Z = -3.1875, p-value = 0.001435
+    ## alternative hypothesis: true mu is not equal to 0
 
 ``` r
 ## Holm correction
-vf_holm <- c(vf_base_F$p.value, vf_frag1_F$p.value, vf_frag2_F$p.value)
+vf_holm <- c(pvalue(vf_base_w), pvalue(vf_frag1_w), pvalue(vf_frag2_w))
 matrix(round(p.adjust(vf_holm, method = "holm"), 5), ncol = 3, nrow = 1, 
     dimnames = list(c("p-value"), c("baseline", "fragmentation 1", 
         "fragmentation 2")))
 ```
 
     ##         baseline fragmentation 1 fragmentation 2
-    ## p-value  0.00273         0.00273         0.00273
+    ## p-value   0.0043          0.0043          0.0043
 
 Session information
 -------------------
