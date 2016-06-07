@@ -6,14 +6,16 @@ output:
 
 # Other effects of sleep fragmentation
 
-### Authors: Stella Iacovides & Peter Kamerman
+### Authors: 
+Peter Kamerman, Fiona Baker & Stella Iacovides
 
-**Date: `r format(Sys.time(), "%B %d, %Y")`**
+### Date of last 'knit'
+`r format(Sys.time(), "%B %d, %Y")`
 
-***
+****
 
 ## Load required packages and set chunk options
-```{r LoadPackages, message = FALSE}
+```{r LoadPackages, include = FALSE}
 # Load packages
 library(ggplot2)
 library(scales)
@@ -25,6 +27,7 @@ library(coin) # Alternative Friedman test (used for von Frey)
 library(readr)
 library(dplyr)
 library(tidyr)
+library(svglite)
 
 # Colour-blind palette
 cb.palette <- c("#006BA4", "#C85200", "#595959")
@@ -40,14 +43,17 @@ opts_chunk$set(echo = TRUE,
                fig.path = './figures/',
                fig.width = 7,
                fig.height = 7,
-               dev = c('png', 'pdf'),
-               tidy = TRUE, 
-               tidy.opts = list(width.cutoff = 65))
+               fig.align = 'center',
+               dev = c('svg', 'pdf'),
+               tidy = FALSE)
 ```
 
 ## Load data
 ```{r importData}
 data <- read_csv('./data/other.csv')
+# PILL data as number (count) of questionniare items rated as 
+# mild or moderate-to-severe
+data_pill <- read_csv('./data/pill-data.csv') 
 ```
 
 ### Quick look
@@ -314,6 +320,105 @@ matrix(round(p.adjust(vf_holm, method = 'holm'), 5),
        ncol = 3, nrow = 1, 
        dimnames = list(c('p-value'),
                        c('baseline', 'fragmentation 1', 'fragmentation 2')))
+```
+
+### PILL
+```{r pillCount}
+# PILL Questionniare consists of 10 questions, each rated on a 
+# 5-point Likert, which we condensed as follows:
+# (0 = not at all, 1-2: mild, 3-4: moderate-to-severe)
+
+# Process data
+pill_plot <- data_pill %>%
+    # Add 'not at all' data 'counts_zero' (total = 10 questions)
+    mutate(counts_zero = 10 - (counts_mild + counts_mod_severe)) %>%
+    gather(severity, count, -id, -period, -time) %>%
+    # Order 'count' categories
+    mutate(severity = factor(severity, 
+                             levels = c('counts_zero', 
+                                        'counts_mild', 
+                                        'counts_mod_severe'),
+                             ordered = TRUE)) %>%
+    arrange(id, period, time, severity)
+
+# Plot
+ggplot(pill_plot, 
+       aes(x = period,
+           y = count,
+           colour = severity,
+           fill = severity)) +
+    geom_boxplot(fatten = 4, alpha = 0.5) +
+    facet_grid(time~.) +
+    labs(x = '\nIntervention',
+         y = 'PILL item counts\n',
+         title = 'PILL item count data\n') +
+    scale_y_discrete(limits = c(0, 10),
+                     breaks = c(0, 2, 4, 6, 8, 10),
+                     labels = c(0, 2, 4, 6, 8, 10),
+                     expand = c(0,0)) +
+    scale_x_discrete(labels = c('Baseline\nnight', 
+                                'Fragmentation\nnight 1',
+                                'Fragmentation\nnight 2')) +
+    scale_fill_manual(name = 'Severity: ',
+                      labels = c('None at all',
+                                 'Mild', 
+                                 'Moderate-to-severe'),
+                      values = cb.palette) +
+    scale_colour_manual(name = 'Severity: ',
+                      labels = c('None at all',
+                                 'Mild', 
+                                 'Moderate-to-severe'),
+                      values = cb.palette) +
+    theme_cowplot() +
+    theme(legend.position = 'bottom',
+          legend.text = element_text(size = 18),
+          legend.title = element_text(size = 18),
+          legend.background = element_rect(fill = 'gray90'),
+          axis.text = element_text(size = 18),
+          axis.title = element_text(size = 18),
+          plot.title = element_text(size = 18),
+          panel.margin.y = unit(3, units = "lines"))
+
+# Friedman test - Evening (none)
+pill_evening_zero <- pill_plot %>%
+    filter(time == 'evening' & severity == 'counts_zero')
+foo <- friedman.test(count ~ period | id, data = pill_evening_zero)
+foo
+# Friedman test - Morning (none)
+pill_morning_zero <- pill_plot %>%
+    filter(time == 'morning' & severity == 'counts_zero')
+bar <- friedman.test(count ~ period | id, data = pill_morning_zero)
+bar
+# Friedman test - Evening (mild)
+pill_evening_mild <- pill_plot %>%
+    filter(time == 'evening' & severity == 'counts_mild')
+baz <- friedman.test(count ~ period | id, data = pill_evening_mild)
+baz
+# Friedman test - Morning (mild)
+pill_morning_mild <- pill_plot %>%
+    filter(time == 'morning' & severity == 'counts_mild')
+qux <- friedman.test(count ~ period | id, data = pill_morning_mild)
+qux
+# Friedman test - Evening (mod-severe)
+pill_evening_mod_severe <- pill_plot %>%
+    filter(time == 'evening' & severity == 'counts_mod_severe')
+fred <- friedman.test(count ~ period | id, 
+                      data = pill_evening_mod_severe)
+fred
+# Friedman test - Morning (mod-severe)
+pill_morning_mod_severe <- pill_plot %>%
+    filter(time == 'morning' & severity == 'counts_mod_severe')
+barney <- friedman.test(count ~ period | id,
+                        data = pill_morning_mod_severe)
+barney
+# Family-wise correction for multiple comparisons
+p_values <- c(zero_evening = foo$p.value,
+              zero_morning = bar$p.value,
+              mild_evening = baz$p.value,
+              mild_morning = qux$p.value,
+              mod_severe_evening = fred$p.value,
+              mod_severe_morning = barney$p.value)
+p.adjust(p_values, method = 'holm')
 ```
 
 ## Session information
