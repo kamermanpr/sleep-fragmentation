@@ -3,7 +3,7 @@ Regression
 
 ### Authors: Stella Iacovides & Peter Kamerman
 
-**Date: January 22, 2016**
+**Date: June 09, 2016**
 
 ------------------------------------------------------------------------
 
@@ -145,7 +145,11 @@ ggplot(ischaemia_plot.f, aes(x = time, y = score, colour = period,
 ```
 
 ![](./figures/facetPlot-1.png)
- \#\# Regression analysis \#\#\# Raw VAS scores
+
+Regression analysis
+-------------------
+
+### Raw VAS scores
 
 ``` r
 # Check data distribution
@@ -352,7 +356,8 @@ qqline(residuals(mod1.full), col = "red", lwd = 2)
 ```
 
 ![](./figures/rawVAS-5.png)
- \#\#\# Arcsine transformed VAS scores
+
+### Arcsine transformed VAS scores
 
 ``` r
 # Create new column with VAS data transformed using arcsine square
@@ -564,7 +569,8 @@ qqline(residuals(mod2.full), col = "red", lwd = 2)
 ```
 
 ![](./figures/arcsineVAS-5.png)
- \#\#\# GAM using raw VAS scores, with beta-regression link
+
+### GAM using raw VAS scores, with beta-regression link
 
 ``` r
 ## Mixed model general additive model based on an expanded
@@ -961,7 +967,9 @@ qqline(residuals(mod3.full), col = "red", lwd = 2)
 ```
 
 ![](./figures/gamVAS-4.png)
- \#\# Differences in pain intensity at t = 0
+
+Differences in pain intensity at t = 0
+--------------------------------------
 
 ``` r
 # Determine whether the is a difference in pain intensity at the
@@ -1062,7 +1070,8 @@ plot(frag2_out)
 ```
 
 ![](./figures/effectSize_1-3.png)
- \#\#\# Cohen's D
+
+### Cohen's D
 
 ``` r
 # Calculate Cohen's D after transforming the data (arcsine)
@@ -1094,29 +1103,29 @@ Session information
 sessionInfo()
 ```
 
-    ## R version 3.2.3 (2015-12-10)
+    ## R version 3.2.4 (2016-03-10)
     ## Platform: x86_64-apple-darwin13.4.0 (64-bit)
-    ## Running under: OS X 10.11.3 (El Capitan)
+    ## Running under: OS X 10.11.5 (El Capitan)
     ## 
     ## locale:
-    ## [1] C
+    ## [1] en_GB.UTF-8/en_GB.UTF-8/en_GB.UTF-8/C/en_GB.UTF-8/en_GB.UTF-8
     ## 
     ## attached base packages:
     ##  [1] parallel  splines   grid      stats     graphics  grDevices utils    
     ##  [8] datasets  methods   base     
     ## 
     ## other attached packages:
-    ##  [1] boot_1.3-17       tidyr_0.4.0       dplyr_0.4.3      
-    ##  [4] readr_0.2.2       pander_0.6.0      knitr_1.12       
-    ##  [7] lsr_0.5           gamlss_4.3-7      gamlss.dist_4.3-5
-    ## [10] MASS_7.3-45       gamlss.data_4.3-2 nlme_3.1-123     
-    ## [13] metafor_1.9-8     Matrix_1.2-3      PMCMR_4.1        
-    ## [16] cowplot_0.6.0     scales_0.3.0      ggplot2_2.0.0    
+    ##  [1] boot_1.3-18       tidyr_0.4.1       dplyr_0.4.3      
+    ##  [4] readr_0.2.2       pander_0.6.0      knitr_1.13       
+    ##  [7] lsr_0.5           gamlss_4.3-8      gamlss.dist_4.3-5
+    ## [10] MASS_7.3-45       gamlss.data_4.3-2 nlme_3.1-127     
+    ## [13] metafor_1.9-8     Matrix_1.2-6      PMCMR_4.1        
+    ## [16] cowplot_0.6.2     scales_0.4.0      ggplot2_2.1.0    
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] Rcpp_0.12.3      formatR_1.2.1    plyr_1.8.3       tools_3.2.3     
-    ##  [5] digest_0.6.9     evaluate_0.8     gtable_0.1.2     lattice_0.20-33 
-    ##  [9] DBI_0.3.1        yaml_2.1.13      stringr_1.0.0    R6_2.1.1        
-    ## [13] survival_2.38-3  rmarkdown_0.9.2  reshape2_1.4.1   magrittr_1.5    
-    ## [17] htmltools_0.3    assertthat_0.1   colorspace_1.2-6 labeling_0.3    
-    ## [21] stringi_1.0-1    lazyeval_0.1.10  munsell_0.4.2
+    ##  [1] Rcpp_0.12.4      formatR_1.4      plyr_1.8.3       tools_3.2.4     
+    ##  [5] digest_0.6.9     evaluate_0.9     gtable_0.2.0     lattice_0.20-33 
+    ##  [9] DBI_0.4          yaml_2.1.13      stringr_1.0.0    R6_2.1.2        
+    ## [13] survival_2.39-3  rmarkdown_0.9.6  reshape2_1.4.1   magrittr_1.5    
+    ## [17] htmltools_0.3.5  assertthat_0.1   colorspace_1.2-6 labeling_0.3    
+    ## [21] stringi_1.0-1    lazyeval_0.1.10  munsell_0.4.3

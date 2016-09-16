@@ -7,7 +7,7 @@ output:
 # Other effects of sleep fragmentation
 
 ### Authors: 
-Peter Kamerman, Fiona Baker & Stella Iacovides
+Peter Kamerman, Fiona Baker, and Stella Iacovides
 
 ### Date of last 'knit'
 `r format(Sys.time(), "%B %d, %Y")`
@@ -23,7 +23,7 @@ library(grid)
 library(cowplot)
 library(knitr)
 library(PMCMR) # Pairwise post-hoc for Friedman test
-library(coin) # Alternative Friedman test (used for von Frey)
+library(coin) # Alternative Friedman and Wilcoxon tests
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -116,7 +116,7 @@ ggplot(sleep.qual,
           axis.title = element_text(size = 18),
           plot.title = element_text(size = 18))
 # Friedman test
-friedman.test(sleep.quality ~ period | id, data = sleep.qual)
+friedman_test(sleep.quality ~ period | id, data = sleep.qual)
 head(sleep.qual)
 # Pairwise posthoc 
 posthoc.friedman.conover.test(y = sleep.qual$sleep.quality, 
@@ -150,7 +150,7 @@ ggplot(morning.vig,
           axis.title = element_text(size = 18),
           plot.title = element_text(size = 18))
 # Friedman test
-friedman.test(morning.vigilance ~ period | id, data = morning.vig)
+friedman_test(morning.vigilance ~ period | id, data = morning.vig)
 # Pairwise posthoc 
 posthoc.friedman.conover.test(y = morning.vig$morning.vigilance,
                               groups = morning.vig$period,
@@ -183,7 +183,7 @@ ggplot(pinprick,
           axis.title = element_text(size = 18),
           plot.title = element_text(size = 18))
 # Friedman test
-friedman.test(pin.prick_mN ~ period | id, data = pinprick)
+friedman_test(pin.prick_mN ~ period | id, data = pinprick)
 # Pairwise posthoc 
 posthoc.friedman.conover.test(y = pinprick$pin.prick_mN,
                               groups = pinprick$period,
@@ -230,14 +230,14 @@ ggplot(poms_plot,
           axis.title = element_text(size = 18),
           plot.title = element_text(size = 18))
 # Friedman test - Evening
-friedman.test(poms.evening ~ period | id, data = poms)
+friedman_test(poms.evening ~ period | id, data = poms)
 # Pairwise posthoc - Evening
 posthoc.friedman.conover.test(y = poms$poms.evening,
                               groups = poms$period,
                               blocks = poms$id,
                               p.adjust.method = 'holm')
 # Friedman test - Morning
-friedman.test(poms.morning ~ period | id, data = poms)
+friedman_test(poms.morning ~ period | id, data = poms)
 # Pairwise posthoc - Morning
 posthoc.friedman.conover.test(y = poms$poms.morning,
                               groups = poms$period,
@@ -341,6 +341,17 @@ pill_plot <- data_pill %>%
                              ordered = TRUE)) %>%
     arrange(id, period, time, severity)
 
+# Quick look at counts (and for manuscript table)
+pill_counts <- pill_plot %>%
+    select(-id) %>%
+    group_by(period, time, severity) %>%
+    summarise(median_count = round(median(count)),
+              q25 = round(quantile(count, 0.25)),
+              q75 = round(quantile(count, 0.75)),
+              min = round(min(count)),
+              max = round(max(count)),
+              percent_count = round((median_count / 10) * 100))
+
 # Plot
 ggplot(pill_plot, 
        aes(x = period,
@@ -379,46 +390,39 @@ ggplot(pill_plot,
           plot.title = element_text(size = 18),
           panel.margin.y = unit(3, units = "lines"))
 
-# Friedman test - Evening (none)
-pill_evening_zero <- pill_plot %>%
-    filter(time == 'evening' & severity == 'counts_zero')
-foo <- friedman.test(count ~ period | id, data = pill_evening_zero)
-foo
-# Friedman test - Morning (none)
-pill_morning_zero <- pill_plot %>%
-    filter(time == 'morning' & severity == 'counts_zero')
-bar <- friedman.test(count ~ period | id, data = pill_morning_zero)
-bar
-# Friedman test - Evening (mild)
-pill_evening_mild <- pill_plot %>%
-    filter(time == 'evening' & severity == 'counts_mild')
-baz <- friedman.test(count ~ period | id, data = pill_evening_mild)
-baz
-# Friedman test - Morning (mild)
-pill_morning_mild <- pill_plot %>%
-    filter(time == 'morning' & severity == 'counts_mild')
-qux <- friedman.test(count ~ period | id, data = pill_morning_mild)
-qux
-# Friedman test - Evening (mod-severe)
-pill_evening_mod_severe <- pill_plot %>%
-    filter(time == 'evening' & severity == 'counts_mod_severe')
-fred <- friedman.test(count ~ period | id, 
-                      data = pill_evening_mod_severe)
-fred
-# Friedman test - Morning (mod-severe)
-pill_morning_mod_severe <- pill_plot %>%
-    filter(time == 'morning' & severity == 'counts_mod_severe')
-barney <- friedman.test(count ~ period | id,
-                        data = pill_morning_mod_severe)
-barney
-# Family-wise correction for multiple comparisons
-p_values <- c(zero_evening = foo$p.value,
-              zero_morning = bar$p.value,
-              mild_evening = baz$p.value,
-              mild_morning = qux$p.value,
-              mod_severe_evening = fred$p.value,
-              mod_severe_morning = barney$p.value)
-p.adjust(p_values, method = 'holm')
+# xtabulate data
+ftable(xtabs(count ~ time + severity + period + id, data = pill_plot)) #
+
+# Only two participants scored pain as mod-to-severe, so 
+# collapse data into 'pain' vs 'no pain' and analyse. 
+
+# Analysis as dichotomous outcome (pain vs no pain)
+# Process data
+pill_dichotomous <- pill_plot %>%
+    spread(severity, count) %>%
+    mutate(no_pain = counts_zero,
+           pain = counts_mild + counts_mod_severe) %>%
+    select(id, period, time, no_pain, pain) %>%
+    gather(symptoms, count, -id, -period, -time)
+
+# Ordinal logistic regression on 'pain' data count
+# with period (baseline, etc) and time (morning/evening)
+# as predictors
+library(ordinal)
+# Null model
+model_null <- clmm(factor(count) ~ 1 + (1|id), 
+                   data = filter(pill_dichotomous, symptoms == 'pain'),
+                   Hess = TRUE, 
+                   link = 'logit')
+summary(model_null)
+# Full model
+model_1 <- clmm(factor(count) ~ time + period + (1|id), 
+                   data = filter(pill_dichotomous, symptoms == 'pain'),
+                Hess = TRUE, 
+                link = 'logit')
+summary(model_1)
+# Compare full model to null model
+anova(model_null, model_1)
 ```
 
 ## Session information

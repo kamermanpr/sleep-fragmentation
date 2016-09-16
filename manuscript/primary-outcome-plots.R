@@ -1,7 +1,7 @@
 # Primary outcome
 #################
-## Authors: Stella Iacovides & Peter Kamerman
-## Contains script used to generate the plot used in the manuscript
+## Authors: Peter Kamerman, Fiona Baker, and Stella Iacovides
+## Contains script used to generate the plots used in the manuscript
 
 ### Load required packages
 library(readr)
@@ -38,7 +38,8 @@ ischaemia <- ggplot(regression,
            fill = period)) +
     geom_smooth(aes(linetype = period),
                 method = 'loess',
-                size = 1) +
+                size = 1,
+                alpha = 0.3) +
     labs(x = '\nDuration of ischaemia (minutes)',
          y = 'Pain intensity (0-100mm VAS)\n') +
     scale_y_continuous(limits = c(0, 100),
@@ -47,12 +48,18 @@ ischaemia <- ggplot(regression,
                        expand = c(0, 0),
                        breaks = c(0, 2, 4, 6, 8, 10),
                        labels = c(0, 2, 4, 6, 8, 10)) +
-    scale_linetype_manual(values = c('solid', 'longdash', 'dotted'),
-                          labels=c("Baseline night", "Fragmentation night 1", "Fragmentation night 2")) +
-    scale_colour_manual(values=c("#000000", "#000000", "#000000"),
-                      labels=c("Baseline night", "Fragmentation night 1", "Fragmentation night 2")) +
-    scale_fill_manual(values=c("gray70", "gray50", "gray30"),
-                        labels=c("Baseline night", "Fragmentation night 1", "Fragmentation night 2")) +
+    scale_linetype_manual(values = c('dotted', 'longdash', 'solid'),
+                          labels = c("Baseline night",
+                                   "Fragmentation night 1",
+                                   "Fragmentation night 2")) +
+    scale_colour_manual(values = c('#000000', '#000000', '#000000'),
+                      labels = c("Baseline night",
+                               "Fragmentation night 1",
+                               "Fragmentation night 2")) +
+    scale_fill_manual(values = c('#000000', '#000000', '#000000'),
+                        labels = c("Baseline night",
+                                 "Fragmentation night 1",
+                                 "Fragmentation night 2")) +
     theme_cowplot() +
     theme(legend.position = c(0.80, 0.15),
           legend.background = element_rect(colour = '#000000'),

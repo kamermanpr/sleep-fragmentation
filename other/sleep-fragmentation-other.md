@@ -3,11 +3,11 @@ Other effects of sleep fragmentation
 
 ### Authors:
 
-Peter Kamerman, Fiona Baker & Stella Iacovides
+Peter Kamerman, Fiona Baker, and Stella Iacovides
 
 ### Date of last 'knit'
 
-June 07, 2016
+June 19, 2016
 
 ------------------------------------------------------------------------
 
@@ -133,14 +133,16 @@ ggplot(sleep.qual,
 
 ``` r
 # Friedman test
-friedman.test(sleep.quality ~ period | id, data = sleep.qual)
+friedman_test(sleep.quality ~ period | id, data = sleep.qual)
 ```
 
     ## 
-    ##  Friedman rank sum test
+    ##  Asymptotic Friedman Test
     ## 
-    ## data:  sleep.quality and period and id
-    ## Friedman chi-squared = 16.909, df = 2, p-value = 0.0002129
+    ## data:  sleep.quality by
+    ##   period (baseline, fragmentation1, fragmentation2) 
+    ##   stratified by id
+    ## chi-squared = 16.909, df = 2, p-value = 0.0002129
 
 ``` r
 head(sleep.qual)
@@ -208,14 +210,16 @@ ggplot(morning.vig,
 
 ``` r
 # Friedman test
-friedman.test(morning.vigilance ~ period | id, data = morning.vig)
+friedman_test(morning.vigilance ~ period | id, data = morning.vig)
 ```
 
     ## 
-    ##  Friedman rank sum test
+    ##  Asymptotic Friedman Test
     ## 
-    ## data:  morning.vigilance and period and id
-    ## Friedman chi-squared = 17.636, df = 2, p-value = 0.000148
+    ## data:  morning.vigilance by
+    ##   period (baseline, fragmentation1, fragmentation2) 
+    ##   stratified by id
+    ## chi-squared = 17.636, df = 2, p-value = 0.000148
 
 ``` r
 # Pairwise posthoc 
@@ -268,14 +272,16 @@ ggplot(pinprick,
 
 ``` r
 # Friedman test
-friedman.test(pin.prick_mN ~ period | id, data = pinprick)
+friedman_test(pin.prick_mN ~ period | id, data = pinprick)
 ```
 
     ## 
-    ##  Friedman rank sum test
+    ##  Asymptotic Friedman Test
     ## 
-    ## data:  pin.prick_mN and period and id
-    ## Friedman chi-squared = 17.706, df = 2, p-value = 0.000143
+    ## data:  pin.prick_mN by
+    ##   period (baseline, fragmentation1, fragmentation2) 
+    ##   stratified by id
+    ## chi-squared = 17.706, df = 2, p-value = 0.000143
 
 ``` r
 # Pairwise posthoc 
@@ -342,14 +348,16 @@ ggplot(poms_plot,
 
 ``` r
 # Friedman test - Evening
-friedman.test(poms.evening ~ period | id, data = poms)
+friedman_test(poms.evening ~ period | id, data = poms)
 ```
 
     ## 
-    ##  Friedman rank sum test
+    ##  Asymptotic Friedman Test
     ## 
-    ## data:  poms.evening and period and id
-    ## Friedman chi-squared = 15.273, df = 2, p-value = 0.0004826
+    ## data:  poms.evening by
+    ##   period (baseline, fragmentation1, fragmentation2) 
+    ##   stratified by id
+    ## chi-squared = 15.273, df = 2, p-value = 0.0004826
 
 ``` r
 # Pairwise posthoc - Evening
@@ -373,14 +381,16 @@ posthoc.friedman.conover.test(y = poms$poms.evening,
 
 ``` r
 # Friedman test - Morning
-friedman.test(poms.morning ~ period | id, data = poms)
+friedman_test(poms.morning ~ period | id, data = poms)
 ```
 
     ## 
-    ##  Friedman rank sum test
+    ##  Asymptotic Friedman Test
     ## 
-    ## data:  poms.morning and period and id
-    ## Friedman chi-squared = 22, df = 2, p-value = 1.67e-05
+    ## data:  poms.morning by
+    ##   period (baseline, fragmentation1, fragmentation2) 
+    ##   stratified by id
+    ## chi-squared = 22, df = 2, p-value = 1.67e-05
 
 ``` r
 # Pairwise posthoc - Morning
@@ -555,6 +565,17 @@ pill_plot <- data_pill %>%
                              ordered = TRUE)) %>%
     arrange(id, period, time, severity)
 
+# Quick look at counts (and for manuscript table)
+pill_counts <- pill_plot %>%
+    select(-id) %>%
+    group_by(period, time, severity) %>%
+    summarise(median_count = round(median(count)),
+              q25 = round(quantile(count, 0.25)),
+              q75 = round(quantile(count, 0.75)),
+              min = round(min(count)),
+              max = round(max(count)),
+              percent_count = round((median_count / 10) * 100))
+
 # Plot
 ggplot(pill_plot, 
        aes(x = period,
@@ -597,106 +618,135 @@ ggplot(pill_plot,
 <img src="./figures/pillCount-1.svg" style="display: block; margin: auto;" />
 
 ``` r
-# Friedman test - Evening (none)
-pill_evening_zero <- pill_plot %>%
-    filter(time == 'evening' & severity == 'counts_zero')
-foo <- friedman.test(count ~ period | id, data = pill_evening_zero)
-foo
+# xtabulate data
+ftable(xtabs(count ~ time + severity + period + id, data = pill_plot)) #
 ```
 
-    ## 
-    ##  Friedman rank sum test
-    ## 
-    ## data:  count and period and id
-    ## Friedman chi-squared = 3.1515, df = 2, p-value = 0.2069
+    ##                                          id  A  B  C  D  E  F  G  H  I  J  K
+    ## time    severity          period                                            
+    ## evening counts_zero       baseline          10  8  6  4  9 10  9 10 10  9  9
+    ##                           fragmentation1     9  8  9  6  8  8  8  9  8  6  9
+    ##                           fragmentation2    10  8  8  9  8 10 10  9  8  9  7
+    ##         counts_mild       baseline           0  2  4  4  1  0  1  0  0  1  1
+    ##                           fragmentation1     1  2  1  4  2  1  2  1  2  4  1
+    ##                           fragmentation2     0  2  2  1  2  0  0  1  2  1  3
+    ##         counts_mod_severe baseline           0  0  0  2  0  0  0  0  0  0  0
+    ##                           fragmentation1     0  0  0  0  0  1  0  0  0  0  0
+    ##                           fragmentation2     0  0  0  0  0  0  0  0  0  0  0
+    ## morning counts_zero       baseline          10  8  7  7  9  9 10 10 10 10 10
+    ##                           fragmentation1    10  9  5  6  9  8  9 10 10  9  8
+    ##                           fragmentation2    10  8  9  7  6  8  7  6  6  9  7
+    ##         counts_mild       baseline           0  2  3  3  1  1  0  0  0  0  0
+    ##                           fragmentation1     0  1  2  3  1  2  1  0  0  1  2
+    ##                           fragmentation2     0  2  1  3  4  2  3  4  4  1  3
+    ##         counts_mod_severe baseline           0  0  0  0  0  0  0  0  0  0  0
+    ##                           fragmentation1     0  0  3  1  0  0  0  0  0  0  0
+    ##                           fragmentation2     0  0  0  0  0  0  0  0  0  0  0
 
 ``` r
-# Friedman test - Morning (none)
-pill_morning_zero <- pill_plot %>%
-    filter(time == 'morning' & severity == 'counts_zero')
-bar <- friedman.test(count ~ period | id, data = pill_morning_zero)
-bar
+# Only two participants scored pain as mod-to-severe, so 
+# collapse data into 'pain' vs 'no pain' and analyse. 
+
+# Analysis as dichotomous outcome (pain vs no pain)
+# Process data
+pill_dichotomous <- pill_plot %>%
+    spread(severity, count) %>%
+    mutate(no_pain = counts_zero,
+           pain = counts_mild + counts_mod_severe) %>%
+    select(id, period, time, no_pain, pain) %>%
+    gather(symptoms, count, -id, -period, -time)
+
+# Ordinal logistic regression on 'pain' data count
+# with period (baseline, etc) and time (morning/evening)
+# as predictors
+library(ordinal)
+# Null model
+model_null <- clmm(factor(count) ~ 1 + (1|id), 
+                   data = filter(pill_dichotomous, symptoms == 'pain'),
+                   Hess = TRUE, 
+                   link = 'logit')
+summary(model_null)
 ```
 
+    ## Cumulative Link Mixed Model fitted with the Laplace approximation
     ## 
-    ##  Friedman rank sum test
+    ## formula: factor(count) ~ 1 + (1 | id)
+    ## data:    filter(pill_dichotomous, symptoms == "pain")
     ## 
-    ## data:  count and period and id
-    ## Friedman chi-squared = 6.7273, df = 2, p-value = 0.03461
+    ##  link  threshold nobs logLik  AIC    niter    max.grad cond.H 
+    ##  logit flexible  66   -104.60 223.20 303(912) 5.26e-06 6.7e+01
+    ## 
+    ## Random effects:
+    ##  Groups Name        Variance Std.Dev.
+    ##  id     (Intercept) 0.9849   0.9924  
+    ## Number of groups:  id 11 
+    ## 
+    ## No Coefficients
+    ## 
+    ## Threshold coefficients:
+    ##     Estimate Std. Error z value
+    ## 0|1  -1.2391     0.4344  -2.853
+    ## 1|2   0.2496     0.4038   0.618
+    ## 2|3   1.4672     0.4485   3.271
+    ## 3|4   2.1718     0.5072   4.282
+    ## 4|5   3.8893     0.8180   4.754
+    ## 5|6   4.6242     1.0848   4.263
 
 ``` r
-# Friedman test - Evening (mild)
-pill_evening_mild <- pill_plot %>%
-    filter(time == 'evening' & severity == 'counts_mild')
-baz <- friedman.test(count ~ period | id, data = pill_evening_mild)
-baz
+# Full model
+model_1 <- clmm(factor(count) ~ time + period + (1|id), 
+                   data = filter(pill_dichotomous, symptoms == 'pain'),
+                Hess = TRUE, 
+                link = 'logit')
+summary(model_1)
 ```
 
+    ## Cumulative Link Mixed Model fitted with the Laplace approximation
     ## 
-    ##  Friedman rank sum test
+    ## formula: factor(count) ~ time + period + (1 | id)
+    ## data:    filter(pill_dichotomous, symptoms == "pain")
     ## 
-    ## data:  count and period and id
-    ## Friedman chi-squared = 4.1875, df = 2, p-value = 0.1232
+    ##  link  threshold nobs logLik  AIC    niter     max.grad cond.H 
+    ##  logit flexible  66   -101.42 222.84 551(1656) 1.17e-05 1.1e+02
+    ## 
+    ## Random effects:
+    ##  Groups Name        Variance Std.Dev.
+    ##  id     (Intercept) 1.159    1.077   
+    ## Number of groups:  id 11 
+    ## 
+    ## Coefficients:
+    ##                      Estimate Std. Error z value Pr(>|z|)  
+    ## timemorning          -0.05216    0.46352  -0.113   0.9104  
+    ## periodfragmentation1  1.23497    0.57890   2.133   0.0329 *
+    ## periodfragmentation2  1.29429    0.59256   2.184   0.0289 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Threshold coefficients:
+    ##     Estimate Std. Error z value
+    ## 0|1  -0.5227     0.5995  -0.872
+    ## 1|2   1.1376     0.6150   1.850
+    ## 2|3   2.4168     0.6660   3.629
+    ## 3|4   3.1324     0.7142   4.386
+    ## 4|5   4.8833     0.9730   5.019
+    ## 5|6   5.6083     1.2041   4.658
 
 ``` r
-# Friedman test - Morning (mild)
-pill_morning_mild <- pill_plot %>%
-    filter(time == 'morning' & severity == 'counts_mild')
-qux <- friedman.test(count ~ period | id, data = pill_morning_mild)
-qux
+# Compare full model to null model
+anova(model_null, model_1)
 ```
 
+    ## Likelihood ratio tests of cumulative link models:
+    ##  
+    ##            formula:                                 link: threshold:
+    ## model_null factor(count) ~ 1 + (1 | id)             logit flexible  
+    ## model_1    factor(count) ~ time + period + (1 | id) logit flexible  
     ## 
-    ##  Friedman rank sum test
-    ## 
-    ## data:  count and period and id
-    ## Friedman chi-squared = 6.4667, df = 2, p-value = 0.03943
-
-``` r
-# Friedman test - Evening (mod-severe)
-pill_evening_mod_severe <- pill_plot %>%
-    filter(time == 'evening' & severity == 'counts_mod_severe')
-fred <- friedman.test(count ~ period | id, 
-                      data = pill_evening_mod_severe)
-fred
-```
-
-    ## 
-    ##  Friedman rank sum test
-    ## 
-    ## data:  count and period and id
-    ## Friedman chi-squared = 1, df = 2, p-value = 0.6065
-
-``` r
-# Friedman test - Morning (mod-severe)
-pill_morning_mod_severe <- pill_plot %>%
-    filter(time == 'morning' & severity == 'counts_mod_severe')
-barney <- friedman.test(count ~ period | id,
-                        data = pill_morning_mod_severe)
-barney
-```
-
-    ## 
-    ##  Friedman rank sum test
-    ## 
-    ## data:  count and period and id
-    ## Friedman chi-squared = 4, df = 2, p-value = 0.1353
-
-``` r
-# Family-wise correction for multiple comparisons
-p_values <- c(zero_evening = foo$p.value,
-              zero_morning = bar$p.value,
-              mild_evening = baz$p.value,
-              mild_morning = qux$p.value,
-              mod_severe_evening = fred$p.value,
-              mod_severe_morning = barney$p.value)
-p.adjust(p_values, method = 'holm')
-```
-
-    ##       zero_evening       zero_morning       mild_evening 
-    ##          0.4928967          0.2076551          0.4928967 
-    ##       mild_morning mod_severe_evening mod_severe_morning 
-    ##          0.2076551          0.6065307          0.4928967
+    ##            no.par    AIC  logLik LR.stat df Pr(>Chisq)  
+    ## model_null      7 223.20 -104.60                        
+    ## model_1        10 222.84 -101.42  6.3541  3     0.0956 .
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 Session information
 -------------------
@@ -717,20 +767,21 @@ sessionInfo()
     ## [8] base     
     ## 
     ## other attached packages:
-    ##  [1] svglite_1.1.0   tidyr_0.4.1     dplyr_0.4.3     readr_0.2.2    
-    ##  [5] coin_1.1-2      survival_2.39-3 PMCMR_4.1       knitr_1.13     
-    ##  [9] cowplot_0.6.2   scales_0.4.0    ggplot2_2.1.0  
+    ##  [1] ordinal_2015.6-28 svglite_1.1.0     tidyr_0.4.1      
+    ##  [4] dplyr_0.4.3       readr_0.2.2       coin_1.1-2       
+    ##  [7] survival_2.39-3   PMCMR_4.1         knitr_1.13       
+    ## [10] cowplot_0.6.2     scales_0.4.0      ggplot2_2.1.0    
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] Rcpp_0.12.4       formatR_1.4       plyr_1.8.3       
     ##  [4] tools_3.2.4       digest_0.6.9      evaluate_0.9     
-    ##  [7] gtable_0.2.0      lattice_0.20-33   Matrix_1.2-6     
-    ## [10] DBI_0.4           yaml_2.1.13       parallel_3.2.4   
-    ## [13] mvtnorm_1.0-5     stringr_1.0.0     gdtools_0.0.7    
-    ## [16] stats4_3.2.4      R6_2.1.2          rmarkdown_0.9.6  
-    ## [19] multcomp_1.4-5    TH.data_1.0-7     reshape2_1.4.1   
-    ## [22] magrittr_1.5      codetools_0.2-14  htmltools_0.3.5  
-    ## [25] modeltools_0.2-21 splines_3.2.4     MASS_7.3-45      
-    ## [28] assertthat_0.1    colorspace_1.2-6  labeling_0.3     
-    ## [31] sandwich_2.3-4    stringi_1.0-1     lazyeval_0.1.10  
-    ## [34] munsell_0.4.3     zoo_1.7-13
+    ##  [7] gtable_0.2.0      lattice_0.20-33   ucminf_1.1-3     
+    ## [10] Matrix_1.2-6      DBI_0.4           yaml_2.1.13      
+    ## [13] parallel_3.2.4    mvtnorm_1.0-5     stringr_1.0.0    
+    ## [16] gdtools_0.0.7     stats4_3.2.4      R6_2.1.2         
+    ## [19] rmarkdown_0.9.6   multcomp_1.4-5    TH.data_1.0-7    
+    ## [22] reshape2_1.4.1    magrittr_1.5      codetools_0.2-14 
+    ## [25] htmltools_0.3.5   modeltools_0.2-21 splines_3.2.4    
+    ## [28] MASS_7.3-45       assertthat_0.1    colorspace_1.2-6 
+    ## [31] labeling_0.3      sandwich_2.3-4    stringi_1.0-1    
+    ## [34] lazyeval_0.1.10   munsell_0.4.3     zoo_1.7-13

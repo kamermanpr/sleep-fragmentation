@@ -1,6 +1,6 @@
 # Secondary outcome measures
 ############################
-## Authors: Stella Iacovides & Peter Kamerman
+## Authors: Peter Kamerman, Fiona Baker, and Stella Iacovides
 ## Contains script used to generate the secondary
 ## outcome measure plots used in the manuscript
 
@@ -12,10 +12,13 @@ library(ggplot2)
 library(cowplot)
 library(grid)
 library(scales)
+
 ### Load data
 data2 <- read_csv('./data/other.csv')
+
 ### Quick look
 glimpse(data2)
+
 ### Process data
 #### Convert id and period to factors
 data2 <- data2 %>%
