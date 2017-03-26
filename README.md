@@ -1,7 +1,15 @@
 # Effect of sleep fragmentation on pain sensitivity
 
 ## Bibliographic information
-[to be added after publication]
+**Accepted manuscript:**
+Iacovides S, George K, Kamerman P, Baker FC. Sleep fragmentation hypersensitizes healthy young women to deep and superficial experimental pain. Journal of Pain (in press). DOI: [10.1016/j.jpain.2017.02.436](http://dx.doi.org/10.1016/j.jpain.2017.02.436). _Get author post-print:_ [_link_](https://drive.google.com/file/d/0B7D82sJChDKlMHlLZ3NJX3lBbUk/view?usp=sharing) 
+
+**Pre-print manuscript:**  
+Iacovides, Stella; George, Kezia; Kamerman, Peter; Baker, Fiona (2017): Pre-print: Sleep fragmentation hypersensitizes healthy young women to deep and superficial experimental pain. figshare DOI: [10.6084/m9.figshare.4750714.v2](http://doi.org/10.6084/m9.figshare.4750714.v2)
+
+**Data (with analysis scripts):**
+Kamerman, Peter; Baker, Fiona; Iacovides, Stella (2017): Data and analysis scripts: sleep fragmentation hypersensitize healthy young women to deep and superficial experimental pain. figshare DOI: [10.6084/m9.figshare.4539880.v7](http://doi.org/10.6084/m9.figshare.4539880.v7)
+
 
 ## License
 **MIT license**   
